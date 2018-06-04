@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    <substitutionProperty name="log.base" value="/log"/>
+
+    <jmxConfigurator/>
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%date{yyyy-MM-dd hh:mm} %-5level %logger{10} - %msg%n</pattern>
+        </layout>
+    </appender>
+
+    <appender name="logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+
+            <fileNamePattern>/opt/logs/TEAM_SYS_%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!--<fileNamePattern>c:/VIS/log_%d{yyyy-MM-dd}.log</fileNamePattern>-->
+
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- logstash日志收集 -->
+    <!--<appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>10.176.36.150:9250</destination>
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>-->
+
+    <!-- start 基础日志打印 -->
+    <logger name="com.chiba">
+        <level value="INFO"/>
+        <appender-ref ref="logfile"/>
+        <!--<appender-ref ref="logstash"/>-->
+    </logger>
+    <!-- end 基础日志打印 -->
+
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+    </root>
+</configuration>

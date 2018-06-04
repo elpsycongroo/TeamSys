@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.7"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.7
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.7.xsd">
+
+    <changeSet id="sys_resource_data_init" author="chiba" dbms="mysql" context="development,test,production">
+        <sqlFile encoding="utf8"
+                 path="db/changelog/sql/sys_resource_data_init.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="sys_role_data_init" author="chiba" dbms="mysql" context="development,test">
+        <sqlFile encoding="utf8"
+                 path="db/changelog/sql/sys_role_data_init.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="sys_role_resource_data_init" author="chiba" dbms="mysql" context="development,test">
+        <sqlFile encoding="utf8"
+                 path="db/changelog/sql/sys_role_resource_data_init.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="sys_user_data_admin_init" author="chiba" dbms="mysql" context="development,test,production">
+        <sqlFile encoding="utf8"
+                 path="db/changelog/sql/sys_user_data_admin_init.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="sys_user_data_init" author="chiba" dbms="mysql" context="development,test">
+        <sqlFile encoding="utf8"
+                 path="db/changelog/sql/sys_user_data_init.sql"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+</databaseChangeLog>

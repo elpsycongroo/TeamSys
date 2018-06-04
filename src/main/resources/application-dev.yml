@@ -1,0 +1,65 @@
+server:
+  port: 8088
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/teammakesystem
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: root
+    hikari:
+      maxLifetime: 1765000 #一个连接的生命时长（毫秒），超时而且没被使用则被释放（retired），缺省:30分钟，建议设置比数据库超时时长少30秒以上
+      maximumPoolSize: 15 #连接池中允许的最大连接数。缺省值：10；推荐的公式：((core_count * 2) + effective_spindle_count)
+  resources:
+    chain:
+      enabled: true
+      strategy:
+        fixed:
+          enabled: true
+          paths: /assets/**
+          version: v1.0.0
+  thymeleaf:
+      suffix: .html
+      cache: false
+      mode: LEGACYHTML5
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    contexts: development
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+  session:
+    store-type: redis
+
+kaptcha:
+  session:
+    key: kaptcha.code
+  #border: no
+  #渲染效果：水纹：WaterRipple；鱼眼：FishEyeGimpy；阴影：ShadowGimpy
+  obscurificator:
+    impl: com.google.code.kaptcha.impl.WaterRipple
+  #不要噪点
+  noise:
+    impl: com.google.code.kaptcha.impl.NoNoise
+  image:
+    width: 90
+    height: 33
+  textproducer:
+    font:
+      size: 25
+      color: black
+    char:
+      length: 4
+      space: 5
+  #和登录框背景颜色一致
+  background:
+    clear:
+      from: 247,247,247
+      to: 247,247,247
