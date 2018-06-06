@@ -9,9 +9,12 @@ import java.security.MessageDigest;
  *****************************************/
 public class MD5Util {
 
-    public static String encode(String password, String userName)
+    private static final String SALT = "Team";
+
+    public static String encode(String password)
     {
-        password = password + userName;
+
+        password = password + SALT;
         MessageDigest md5 = null;
         try
         {

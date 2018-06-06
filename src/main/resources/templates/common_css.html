@@ -1,0 +1,20 @@
+<head th:fragment="head(title)">
+    <title th:text="${title}">组队系统</title>
+    <meta charset="utf-8"/>
+    <meta name="keywords" th:content="${title}" content="组队系统"/>
+    <meta name="description" th:content="${title}" content="组队系统"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
+
+    <!--Basic Styles-->
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/bootstrap.min.css')}" rel="stylesheet"/>
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/font-awesome.min.css')}" rel="stylesheet"/>
+
+    <!--Beyond styles-->
+    <link id="beyond-link" th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/beyond.min.css')}"
+          rel="stylesheet"/>
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/demo.min.css')}" rel="stylesheet"/>
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/animate.min.css')}" rel="stylesheet"/>
+</head>

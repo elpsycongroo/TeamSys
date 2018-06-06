@@ -1,0 +1,128 @@
+<!--Basic Scripts-->
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jquery-2.0.3.min.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/bootstrap.min.js')}"></script>
+
+<!--Beyond Scripts-->
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/beyond.min.js')}"></script>
+
+<div class="bootbox modal fade modal-blue" role="dialog" style="display:none;" id="commonModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id="segment_modal"></div>
+        </div>
+    </div>
+</div>
+<div class="bootbox modal fade modal-blue" role="dialog" style="display:none;" id="bigModal">
+    <div class="modal-dialog" style="width: 80%">
+        <div class="modal-content">
+            <div id="segment_bigModal"></div>
+        </div>
+    </div>
+</div>
+<div class="bootbox modal fade modal-blue" role="dialog" style="display:none;" id="pwdModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id="pwd_segment_modal"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function beforeAjax(xhr) {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        if(header && token ){
+            xhr.setRequestHeader(header, token);
+        }
+    }
+
+    function complateAjax(xhr) {
+        var contenttype = xhr.getResponseHeader("Content-Type");
+        if (contenttype != null && contenttype.indexOf("javascript") > -1) {
+            return false;
+        }
+
+        var html = xhr.responseText;
+
+        if (typeof(html) == "undefined") {
+            return false;
+        }
+
+        if (null != xhr.getResponseHeader("CSRFToken")) {
+            jQuery("meta[name='CSRFToken']").attr("content", xhr.getResponseHeader("CSRFToken"));
+        }
+
+        if ("error" == html) {
+            Notify('请求失败', 'top-right', '5000', 'danger', 'fa-times', true);
+        }
+
+        return false;
+    }
+
+    function toggleAjaxLoading(type) {
+        if (type == "start") {
+            jQuery(".loading-container").removeClass("loading-inactive").addClass("loading-active");
+        } else if (type == "end") {
+            jQuery(".loading-container").removeClass("loading-active").addClass("loading-inactive");
+        }
+    }
+
+    function commonAjax(asyncFlag, url, requestType, data, functionForProcessResult) {
+        if (null == asyncFlag)
+            asyncFlag = true;
+
+        var defer = $.Deferred();
+        jQuery.ajax({
+            cache: false,
+            type: requestType,
+            url: url,
+            data: data,
+            async: asyncFlag,
+            success: function (data) {
+                defer.resolve(data);
+
+                if (null == functionForProcessResult) {
+                    if (data == "success") {
+                        Notify('操作成功', 'top-right', '5000', 'success', 'fa-check', true);
+                        jQuery(grid_selector).trigger("reloadGrid");
+                    }
+                    else if (data == "error") {
+                        Notify('操作失败', 'top-right', '5000', 'danger', 'fa-times', true);
+                    }
+                }
+                else {
+                    functionForProcessResult(data);
+                }
+            }
+        });
+
+        return defer.promise();
+    }
+
+    function commonAjaxByLoading(asyncFlag, url, requestType, data, functionProcess, functionForProcessResult) {
+        toggleAjaxLoading("start");
+
+        $.when(commonAjax(asyncFlag, url, requestType, data, functionForProcessResult)).done(function (data) {
+            toggleAjaxLoading("end");
+            if (null != functionProcess) {
+                functionProcess();
+            }
+        });
+    }
+
+    function commonFormAjax(asyncFlag, formTag, requestType, functionForProcessResult) {
+        var ajaxCallUrl = formTag.action;
+        return commonAjax(asyncFlag, ajaxCallUrl, requestType, jQuery(formTag).serialize(), functionForProcessResult);
+    }
+
+    function commonFormAjaxByLoading(asyncFlag, formTag, requestType, functionProcess, functionForProcessResult) {
+        toggleAjaxLoading("start");
+
+        $.when(commonFormAjax(asyncFlag, formTag, requestType, functionForProcessResult)).done(function (data) {
+            toggleAjaxLoading("end");
+            if (null != functionProcess) {
+                functionProcess();
+            }
+        });
+    }
+</script>

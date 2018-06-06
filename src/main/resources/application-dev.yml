@@ -21,7 +21,7 @@ spring:
       strategy:
         fixed:
           enabled: true
-          paths: /assets/**
+          paths: /assets/** , /v1.0.0/**
           version: v1.0.0
   thymeleaf:
       suffix: .html
@@ -37,6 +37,7 @@ spring:
     database: 0
   session:
     store-type: redis
+
 
 kaptcha:
   session:

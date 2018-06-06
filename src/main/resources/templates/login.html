@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--Head-->
+<head th:include="common_css::head(title='登录')"/>
+<!--Head Ends-->
+<!--Body-->
+<body>
+<div class="login-container animated fadeInDown">
+    <div class="loginbox bg-white form-control" style="height: 250px !important;">
+        <div class="loginbox-title">登录</div>
+        <form id="login-form" method="post" action="login">
+            <div th:text="${param.error} ? (${session.login_error_message} ? ${session.login_error_message} : '密码错误')"></div>
+
+                <div class="loginbox-textbox">
+                    <input type="text" class="form-control" placeholder="邮箱地址" name="username"/>
+                </div>
+                <div class="loginbox-textbox">
+                    <input type="password" class="form-control" placeholder="密码" name="password"/>
+                </div>
+                <div class="loginbox-forgot">
+                    <a href="">忘记密码？</a>
+                </div>
+                <div class="loginbox-submit">
+                    <input type="submit" class="btn btn-primary btn-block" value="登录">
+                </div>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        </form>
+        <div class="loginbox-signup">
+            <a href="/register">通过邮箱注册</a>
+        </div>
+    </div>
+    <div class="logobox " style="text-align: -webkit-center;padding-top: 15px;">
+        KUON GUGU, BEST GUGU
+    </div>
+</div>
+
+<footer th:replace="common_js"/>
+
+</body>
+<!--Body Ends-->
+</html>

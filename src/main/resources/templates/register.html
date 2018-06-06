@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--Head-->
+
+<head th:include="common_css::head(title='注册')"/>
+
+<!--Head Ends-->
+<!--Body-->
+<body>
+<div class="register-container animated fadeInDown">
+    <div class="registerbox bg-white form-control" style="height: 480px!important;">
+        <form action="/register">
+            <div class="registerbox-title">注册</div>
+
+            <div class="registerbox-caption ">请填写注册信息</div>
+            <div class="registerbox-textbox">
+                <input type="text" class="form-control" placeholder="用户名"/>
+            </div>
+            <div class="registerbox-textbox">
+                <input type="password" class="form-control" placeholder="密码"/>
+            </div>
+            <div class="registerbox-textbox">
+                <input type="password" class="form-control" placeholder="确认密码"/>
+            </div>
+            <hr class="wide"/>
+            <div class="registerbox-textbox">
+                <input type="text" class="form-control" placeholder="邮箱"/>
+            </div>
+            <div class="registerbox-textbox">
+                <input type="text" class="form-control" placeholder="舰队"/>
+            </div>
+            <div class="registerbox-textbox">
+                <input type="text" class="form-control" placeholder="游戏ID"/>
+            </div>
+            <div class="registerbox-submit">
+                <input type="submit" class="btn btn-primary pull-right" value="提交">
+            </div>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        </form>
+    </div>
+    <div class="logobox" style="text-align: -webkit-center;padding-top: 15px;">
+        KUON GUGU, BEST GUGU
+    </div>
+</div>
+<footer th:replace="common_js"/>
+
+</body>
+<!--Body Ends-->
+</html>
