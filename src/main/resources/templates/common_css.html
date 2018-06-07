@@ -4,8 +4,8 @@
     <meta name="keywords" th:content="${title}" content="组队系统"/>
     <meta name="description" th:content="${title}" content="组队系统"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf} ne null"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf} ne null"/>
     <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
 
     <!--Basic Styles-->

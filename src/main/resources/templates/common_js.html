@@ -5,6 +5,8 @@
 <!--Beyond Scripts-->
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/beyond.min.js')}"></script>
 
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/validation/bootstrapValidator.js')}"></script>
+
 <div class="bootbox modal fade modal-blue" role="dialog" style="display:none;" id="commonModal">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -48,8 +50,8 @@
             return false;
         }
 
-        if (null != xhr.getResponseHeader("CSRFToken")) {
-            jQuery("meta[name='CSRFToken']").attr("content", xhr.getResponseHeader("CSRFToken"));
+        if (null != xhr.getResponseHeader("_csrf")) {
+            jQuery("meta[name='_csrf']").attr("content", xhr.getResponseHeader("_csrf"));
         }
 
         if ("error" == html) {

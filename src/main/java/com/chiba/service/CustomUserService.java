@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
  *****************************************/
 @Service
 @Slf4j
-public class UserService implements UserDetailsService {
+public class CustomUserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -29,5 +29,9 @@ public class UserService implements UserDetailsService {
         }
         log.info("LOGIN:=====" + user.getUsername() + "=====" + user.getPassword());
         return user;
+    }
+
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

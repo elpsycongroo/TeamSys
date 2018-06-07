@@ -6,24 +6,37 @@
 <!--Body-->
 <body>
 <div class="login-container animated fadeInDown">
-    <div class="loginbox bg-white form-control" style="height: 250px !important;">
+    <div class="loginbox bg-white form-control" id="loginbox" style="height: 420px !important;">
         <div class="loginbox-title">登录</div>
         <form id="login-form" method="post" action="login">
-            <div th:text="${param.error} ? (${session.login_error_message} ? ${session.login_error_message} : '密码错误')"></div>
+            <p th:if="${param.logout}" class="warning">已注销</p>
+            <p th:if="${param.error}" class="danger">账号或密码有误，请重试</p>
 
-                <div class="loginbox-textbox">
-                    <input type="text" class="form-control" placeholder="邮箱地址" name="username"/>
+            <div class="loginbox-textbox form-group">
+                <input type="text" class="form-control" placeholder="邮箱地址" name="username"/>
+            </div>
+            <div class="loginbox-textbox form-group">
+                <input type="password" class="form-control" placeholder="密码" name="password"/>
+            </div>
+            <div class="loginbox-textbox form-group">
+                <div class="row">
+                    <div class="col-xs-8">
+                        <input type="text" class="form-control" placeholder="验证码" name="verifyCode"/>
+                    </div>
+                    <div class="col-xs-4">
+                        <img width="70" height="42" onclick="refreshCode();"
+                             id="code_img" th:src="@{/kaptcha-image}"
+                             style="cursor:pointer;float:left;">
+                    </div>
                 </div>
-                <div class="loginbox-textbox">
-                    <input type="password" class="form-control" placeholder="密码" name="password"/>
-                </div>
-                <div class="loginbox-forgot">
-                    <a href="">忘记密码？</a>
-                </div>
-                <div class="loginbox-submit">
-                    <input type="submit" class="btn btn-primary btn-block" value="登录">
-                </div>
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            </div>
+            <div class="loginbox-forgot">
+                <a href="">忘记密码？</a>
+            </div>
+            <div class="loginbox-submit">
+                <input type="button" id="loginBtn" class="btn btn-primary btn-block" value="登录">
+            </div>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         </form>
         <div class="loginbox-signup">
             <a href="/register">通过邮箱注册</a>
@@ -35,6 +48,76 @@
 </div>
 
 <footer th:replace="common_js"/>
+<script type="text/javascript" th:inline="javascript">
+
+    jQuery(function($){
+
+        $('#login-form').bootstrapValidator({
+            message: 'This value is not valid',
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                username: {
+                    message: 'The username is not valid',
+                    validators: {
+                        notEmpty: {
+                            message: 'The username is required and can\'t be empty'
+                        },
+                        remote : {
+                            url : 'api/check_username',
+                            message : "该用户名不存在！",
+                            type : 'get'
+                        },
+                        different: {
+                            field: 'password',
+                            message: 'The username and password can\'t be the same as each other'
+                        }
+                    }
+                },
+                password: {
+                    validators: {
+                        notEmpty: {
+                            message: 'The password is required and can\'t be empty'
+                        },
+                        different: {
+                            field: 'username',
+                            message: 'The password can\'t be the same as username'
+                        }
+                    }
+                },
+                verifyCode : {
+                    validators: {
+                        notEmpty: {
+                            message: 'The kaptcha is required and can\'t be empty'
+                        },
+                        remote : {
+                            url : '/kaptcha-image/verify',
+                            message : "验证码错误！",
+                            type : 'get'
+                        }
+                    }
+                }
+            }
+        });
+        $("#loginBtn").click(function () {
+            var bootstrapValidator = $('#login-form').data('bootstrapValidator');
+            bootstrapValidator.validate();
+            if(bootstrapValidator.isValid()){
+                //表单提交的方法、比如ajax提交
+                document.getElementById("login-form").submit();
+            }
+        });
+    });
+
+
+    //刷新验证码
+    function refreshCode() {
+        jQuery("#code_img").attr("src", "/kaptcha-image?_=" + new Date().getTime());
+    }
+</script>
 
 </body>
 <!--Body Ends-->

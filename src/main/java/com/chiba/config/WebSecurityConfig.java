@@ -1,6 +1,6 @@
 package com.chiba.config;
 
-import com.chiba.service.UserService;
+import com.chiba.service.CustomUserService;
 import com.chiba.utils.MD5Util;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +23,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     UserDetailsService userService() {
-        return new UserService();
+        return new CustomUserService();
     }
 
     @Override
@@ -48,12 +48,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().ignoringAntMatchers("/api/**", "/login", "/register");
+        http.csrf().ignoringAntMatchers("/api/**", "/login", "/register", "/kaptcha-image/**");
         http.authorizeRequests()
                 .antMatchers(
-                        "/common/kaptcha-image", "/register").permitAll()
+                        "/kaptcha-image/**", "/register", "/api/**").permitAll()
                 .anyRequest().authenticated()
-                .and().formLogin().loginPage("/login").defaultSuccessUrl("/dashboard").failureUrl("/login?error").permitAll()
+                .and().formLogin().loginPage("/login").defaultSuccessUrl("/dashboard", true).failureUrl("/login?error").permitAll()
                 .and().logout().permitAll().logoutSuccessUrl("/login");
     }
 }
