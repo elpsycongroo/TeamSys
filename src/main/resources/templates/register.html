@@ -9,32 +9,45 @@
 <!--Body-->
 <body>
 <div class="register-container animated fadeInDown">
-    <div class="registerbox bg-white form-control" style="height: 480px!important;">
-        <form action="/register">
+    <div class="registerbox bg-white form-control" style="height: 750px!important;">
+        <form action="/register" method="POST" id="reg-form">
+
             <div class="registerbox-title">注册</div>
 
             <div class="registerbox-caption ">请填写注册信息</div>
-            <div class="registerbox-textbox">
-                <input type="text" class="form-control" placeholder="用户名"/>
+            <div class="registerbox-textbox form-group">
+                <input type="text" class="form-control" placeholder="用户名" name="username"/>
             </div>
-            <div class="registerbox-textbox">
-                <input type="password" class="form-control" placeholder="密码"/>
+            <div class="registerbox-textbox form-group">
+                <input type="password" class="form-control" placeholder="密码" name="password"/>
             </div>
-            <div class="registerbox-textbox">
-                <input type="password" class="form-control" placeholder="确认密码"/>
+            <div class="registerbox-textbox form-group">
+                <input type="password" class="form-control" placeholder="确认密码" name="confirmPassword"/>
             </div>
             <hr class="wide"/>
-            <div class="registerbox-textbox">
-                <input type="text" class="form-control" placeholder="邮箱"/>
+            <div class="registerbox-textbox form-group">
+                <input type="text" class="form-control" placeholder="邮箱" name="email"/>
             </div>
-            <div class="registerbox-textbox">
-                <input type="text" class="form-control" placeholder="舰队"/>
+            <div class="registerbox-textbox form-group">
+                <input type="text" class="form-control" placeholder="舰队" name="clan"/>
             </div>
-            <div class="registerbox-textbox">
-                <input type="text" class="form-control" placeholder="游戏ID"/>
+            <div class="registerbox-textbox form-group">
+                <input type="text" class="form-control" placeholder="游戏ID" name="gameId"/>
+            </div>
+            <div class="registerbox-textbox form-group">
+                <div class="row">
+                    <div class="col-xs-8">
+                        <input type="text" class="form-control" placeholder="验证码" name="verifyCode"/>
+                    </div>
+                    <div class="col-xs-4">
+                        <img width="70" height="42" onclick="refreshCode();"
+                             id="code_img" th:src="@{/kaptcha-image}"
+                             style="cursor:pointer;float:left;">
+                    </div>
+                </div>
             </div>
             <div class="registerbox-submit">
-                <input type="submit" class="btn btn-primary pull-right" value="提交">
+                <input type="button" class="btn btn-primary pull-right" value="提交" id="regBtn">
             </div>
         </form>
     </div>
@@ -45,5 +58,99 @@
 <footer th:replace="common_js"/>
 
 </body>
+<script>
+    jQuery(function($){
+        $('#reg-form').bootstrapValidator({
+            message: 'This value is not valid',
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                username: {
+                    validators: {
+                        notEmpty: {
+                            message: '用户名不能为空'
+                        },
+                        remote : {
+                            url : 'api/check_username_reg',
+                            message : "该用户名已存在",
+                            type : 'get'
+                        },
+                        stringLength: {//检测长度
+                            min: 5,
+                            max: 15,
+                            message: '长度必须在5-15之间'
+                        },
+                    }
+                },
+                password: {
+                    validators: {
+                        notEmpty: {
+                            message: '密码不能为空'
+                        },
+                        different: {
+                            field: 'username',
+                            message: '密码不得和用户名一致'
+                        },
+                        stringLength: {//检测长度
+                            min: 6,
+                            max: 15,
+                            message: '长度必须在6-15之间'
+                        }
+                    }
+                },
+                confirmPassword: {
+                    validators: {
+                        notEmpty: {
+                            message: '确认密码不能为空'
+                        },
+                        identical: {
+                            field: 'password',
+                            message: '两次输入的密码不一致'
+                        }
+                    }
+                },
+                email: {
+                    validators :{
+                        emailAddress: {
+                            message: '输入的email不合法'
+                        }
+                    }
+                },
+                verifyCode : {
+                    validators: {
+                        notEmpty: {
+                            message: '验证码不能为空'
+                        },
+                        remote : {
+                            url : '/kaptcha-image/verify',
+                            message : "验证码错误",
+                            type : 'get'
+                        }
+                    }
+                }
+            }
+        });
+        $("#regBtn").click(function () {
+            var bootstrapValidator = $('#reg-form').data('bootstrapValidator');
+            bootstrapValidator.validate();
+            if(bootstrapValidator.isValid()){
+                //表单提交的方法、比如ajax提交
+                var data = $("#reg-form").serialize();
+                commonAjax(false, "/api/register","POST",data,function(resp){
+                    if (eval(resp).status == "ok") {
+                        alert("注册成功，请登录！");
+                        window.location.href = "login";
+                    }
+                });
+            }
+        });
+    });
+    function refreshCode() {
+        jQuery("#code_img").attr("src", "/kaptcha-image?_=" + new Date().getTime());
+    }
+</script>
 <!--Body Ends-->
 </html>

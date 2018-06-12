@@ -1,7 +1,9 @@
 package com.chiba.config;
 
+import com.chiba.service.CustomSecurityInterceptor;
 import com.chiba.service.CustomUserService;
 import com.chiba.utils.MD5Util;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -11,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -25,6 +28,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     UserDetailsService userService() {
         return new CustomUserService();
     }
+
+    @Autowired
+    private CustomSecurityInterceptor customSecurityInterceptor;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -53,7 +59,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(
                         "/kaptcha-image/**", "/register", "/api/**").permitAll()
                 .anyRequest().authenticated()
+                .and().logout().logoutUrl("/logout").permitAll().logoutSuccessUrl("/login")//定义logout不需要验证
                 .and().formLogin().loginPage("/login").defaultSuccessUrl("/dashboard", true).failureUrl("/login?error").permitAll()
                 .and().logout().permitAll().logoutSuccessUrl("/login");
+        http.addFilterBefore(customSecurityInterceptor, FilterSecurityInterceptor.class);
     }
 }

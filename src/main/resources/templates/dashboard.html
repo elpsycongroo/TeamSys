@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:include="common_css::head(title='DASHBOARD')"/>
+<body>
+<h1>THIS IS DASHBOARD</h1>
+<h3 sec:authentication="name"></h3>
+<div sec:authorize="hasAuthority('PRIVATE_INFO')">
+    <p class="bg-info">恭喜您,您有 PRIVATE_INFO 权限 </p>
+</div>
+<div sec:authorize="hasAuthority('SYSTEM_MANAGE')">
+    <p class="bg-info">恭喜您,您有 SYSTEM_MANAGE 权限 </p>
+</div>
+
+</body>
+</html>

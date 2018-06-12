@@ -33,6 +33,12 @@ public class Resource extends ExtendEntity {
     @Column(name = "icon_class")
     private String iconClass;
 
+    /**
+     * HTTP请求方法（GET POST PUT DELETE）
+     */
+    @Column(name = "method")
+    private String method;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_res_id")
     private Resource parentResource; //父资源

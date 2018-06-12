@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -33,5 +34,10 @@ public class CustomUserService implements UserDetailsService {
 
     public User findUserByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void saveUser(User user) {
+        userRepository.save(user);
     }
 }

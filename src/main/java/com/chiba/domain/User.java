@@ -1,9 +1,9 @@
 package com.chiba.domain;
 
+import com.chiba.bean.CustomGrantedAuthority;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
@@ -33,16 +33,28 @@ public class User extends ExtendEntity implements UserDetails {
     @Column(name = "true_name")
     private String trueName;
 
+    @Column(name = "clan")
+    private String clan;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "game_id")
+    private String gameId;
+
+
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> auths = new ArrayList<>();
         Role role = this.getRole();
-        auths.add(new SimpleGrantedAuthority(role.getName()));
-        return auths;
+        List<Resource> resources = role.getResourceList();
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        resources.forEach(r -> grantedAuthorities.add(new CustomGrantedAuthority(r.getCode(), r.getMethod())));
+        return grantedAuthorities;
     }
 
     @Override
@@ -52,7 +64,7 @@ public class User extends ExtendEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isDeleteStatus();
     }
 
     @Override

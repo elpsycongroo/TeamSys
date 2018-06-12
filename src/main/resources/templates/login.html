@@ -4,13 +4,14 @@
 <head th:include="common_css::head(title='登录')"/>
 <!--Head Ends-->
 <!--Body-->
-<body>
+<body th:inline="text">
 <div class="login-container animated fadeInDown">
     <div class="loginbox bg-white form-control" id="loginbox" style="height: 420px !important;">
         <div class="loginbox-title">登录</div>
         <form id="login-form" method="post" action="login">
+            <p th:if="${message}" class="success">${message}</p>
             <p th:if="${param.logout}" class="warning">已注销</p>
-            <p th:if="${param.error}" class="danger">账号或密码有误，请重试</p>
+            <p th:if="${param.error}" class="danger" >账号或密码有误或该账号已停用，请重试</p>
 
             <div class="loginbox-textbox form-group">
                 <input type="text" class="form-control" placeholder="邮箱地址" name="username"/>
@@ -64,38 +65,30 @@
                     message: 'The username is not valid',
                     validators: {
                         notEmpty: {
-                            message: 'The username is required and can\'t be empty'
+                            message: '用户名不能为空'
                         },
                         remote : {
                             url : 'api/check_username',
-                            message : "该用户名不存在！",
+                            message : "该用户名不存在",
                             type : 'get'
-                        },
-                        different: {
-                            field: 'password',
-                            message: 'The username and password can\'t be the same as each other'
                         }
                     }
                 },
                 password: {
                     validators: {
                         notEmpty: {
-                            message: 'The password is required and can\'t be empty'
-                        },
-                        different: {
-                            field: 'username',
-                            message: 'The password can\'t be the same as username'
+                            message: '密码不能为空'
                         }
                     }
                 },
                 verifyCode : {
                     validators: {
                         notEmpty: {
-                            message: 'The kaptcha is required and can\'t be empty'
+                            message: '验证码不能为空'
                         },
                         remote : {
                             url : '/kaptcha-image/verify',
-                            message : "验证码错误！",
+                            message : "验证码错误",
                             type : 'get'
                         }
                     }
