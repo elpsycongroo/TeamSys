@@ -37,12 +37,13 @@ public class CustomInvocationSecurityMetadataSourceService implements FilterInvo
         List<Resource> permissions = resourceRepository.findAll();
         for (Resource permission : permissions) {
             array = new ArrayList<>();
-            cfg = new SecurityConfig(permission.getCode());
-            //此处只添加了code，其实还可以添加更多权限的信息，例如请求方法到ConfigAttribute的集合中去。此处添加的信息将会作为
+            array.add(new SecurityConfig(permission.getCode()));
+            //此处只添加了url，其实还可以添加更多权限的信息，例如请求方法到ConfigAttribute的集合中去。此处添加的信息将会作为
             // CustomAccessDecisionManager类的decide的第三个参数。
-            array.add(cfg);
+            array.add(new SecurityConfig(permission.getMethod()));
+
             //用权限的getUrl() 作为map的key，用ConfigAttribute的集合作为 value，
-            map.put(permission.getUrl(), array);
+            map.put(permission.getUrl() + "|" + permission.getMethod(), array);
         }
     }
 
@@ -60,11 +61,14 @@ public class CustomInvocationSecurityMetadataSourceService implements FilterInvo
         }
         //object 中包含用户请求的request 信息
         HttpServletRequest request = ((FilterInvocation) o).getHttpRequest();
+        String requestMethod = request.getMethod();
         AntPathRequestMatcher matcher;
         for (String resUrl : map.keySet()) {
             if (!SysUtils.isEmpty(resUrl)) {
-                matcher = new AntPathRequestMatcher(resUrl);
-                if (matcher.matches(request)) {
+                if (resUrl.split("\\|")[0].equals(request.getRequestURI()) &&
+                        ((resUrl.split("\\|")[1].equals(requestMethod)) ||
+                                (resUrl.split("\\|")[1].equals("ALL")))
+                        ) {
                     return map.get(resUrl);
                 }
             }

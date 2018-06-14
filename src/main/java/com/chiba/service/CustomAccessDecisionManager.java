@@ -6,9 +6,13 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.web.FilterInvocation;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -30,13 +34,20 @@ public class CustomAccessDecisionManager implements AccessDecisionManager {
         if (null == configAttributes || configAttributes.size() <= 0) {
             return;
         }
+        HttpServletRequest request = ((FilterInvocation) o).getHttpRequest();
+        String requestMethod = request.getMethod();
         String needResource;
         for (ConfigAttribute c : configAttributes) {
             //此处needResource为资源权限的code
             needResource = c.getAttribute();
             for (GrantedAuthority a : authentication.getAuthorities()) {
-                if (needResource.trim().equals(a.getAuthority())) {
-                    return;
+                //getAuthority()方法的返回值取决于CustomGrantedAuthority的toString
+                if (needResource.trim().equals(a.getAuthority().split(";")[0])) {
+                    //如果method方法符合 或者为all 则放行
+                    if (a.getAuthority().split(";")[1].equals("ALL") ||
+                            requestMethod.equalsIgnoreCase(a.getAuthority().split(";")[1])) {
+                        return;
+                    }
                 }
             }
         }

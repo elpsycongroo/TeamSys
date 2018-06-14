@@ -39,6 +39,9 @@ public class Resource extends ExtendEntity {
     @Column(name = "method")
     private String method;
 
+    @Column(name = "api")
+    private boolean api;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_res_id")
     private Resource parentResource; //父资源

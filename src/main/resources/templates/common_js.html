@@ -30,6 +30,17 @@
 </div>
 
 <script>
+    jQuery(function($){
+        jQuery.ajaxSetup({
+            cache: false,
+            beforeSend: function (xhr) {
+                beforeAjax(xhr);
+            },
+            complete: function (xhr) {
+                complateAjax(xhr);
+            }
+        });
+    });
     function beforeAjax(xhr) {
         var token = $("meta[name='_csrf']").attr("content");
         var header = $("meta[name='_csrf_header']").attr("content");

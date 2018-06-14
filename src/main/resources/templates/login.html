@@ -9,9 +9,10 @@
     <div class="loginbox bg-white form-control" id="loginbox" style="height: 420px !important;">
         <div class="loginbox-title">登录</div>
         <form id="login-form" method="post" action="login">
-            <p th:if="${message}" class="success">${message}</p>
+            <p th:if="${message}" class="success">[[${message}]]</p>
             <p th:if="${param.logout}" class="warning">已注销</p>
             <p th:if="${param.error}" class="danger" >账号或密码有误或该账号已停用，请重试</p>
+            <p th:if="${session.login_error_message}" class="danger">[[${session.login_error_message}]]</p>
 
             <div class="loginbox-textbox form-group">
                 <input type="text" class="form-control" placeholder="邮箱地址" name="username"/>

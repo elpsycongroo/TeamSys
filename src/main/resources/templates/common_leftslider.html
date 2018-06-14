@@ -1,0 +1,34 @@
+<div th:fragment="leftslider" class="page-sidebar" id="sidebar">
+
+    <!-- Page Sidebar Header-->
+    <ul class="nav sidebar-menu" >
+
+        <li th:each="resource : ${session.resourceListForLeftSlider}" th:id="${resource.customIdName}" th:if="${session.resourceList.contains(resource)}">
+            <a th:if="${resource.childResourceList eq null} or (${resource.childResourceList ne null} and ${resource.childResourceList.size()} le 0 )"
+               th:href="${resource.url}">
+                <i th:class="'menu-icon fa '+ ${resource.iconClass}"></i>
+                <span class="menu-text" th:text="${resource.name}"></span>
+            </a>
+
+
+            <a th:if="${resource.childResourceList ne null} and ${resource.childResourceList.size()} gt 0" href="#" class="menu-dropdown" >
+                <i th:class="'menu-icon fa '+ ${resource.iconClass}"></i>
+                <span class="menu-text" th:text="${resource.name}"></span>
+                <i class="menu-expand"></i>
+            </a>
+
+
+
+            <ul class="submenu"  th:if="${resource.childResourceList ne null} and ${resource.childResourceList.size()} gt 0 ">
+                <li th:each="childResource : ${resource.childResourceList}" th:if="${session.resourceList.contains(childResource)}" th:id="${childResource.customIdName}">
+                    <a th:href="${childResource.url}">
+                        <span class="menu-text" th:text="${childResource.name}"></span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+
+    </ul>
+    <!-- /Sidebar Menu -->
+</div>

@@ -8,10 +8,7 @@ import com.chiba.service.RoleService;
 import com.chiba.utils.MD5Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -56,6 +53,11 @@ public class ApiController {
         user.setPassword(MD5Util.encode(user.getPassword()));
         user.setRole(roleService.findByCode("user"));
         userService.saveUser(user);
+        return new ResponseBean();
+    }
+
+    @PutMapping("/user")
+    public ResponseBean editUser() {
         return new ResponseBean();
     }
 }
