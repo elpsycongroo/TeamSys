@@ -87,4 +87,9 @@ public class CommonPageController {
         }
         return new ValidatorBean(true);
     }
+
+    @GetMapping("/error-{page}")
+    public String getErrorPage(@PathVariable String page) {
+        return "error-" + page;
+    }
 }

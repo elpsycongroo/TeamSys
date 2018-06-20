@@ -47,8 +47,8 @@
                             <i class="icon glyphicon glyphicon-cog"></i>
                         </a>
                     </div>
-                    <form method="post" action="logout" id="logoutform" style="display: none">
-                        <input type="hidden" th:name="${_csrf.headerName}" th:value="${_csrf.token}"/>`
+                    <form method="post" action="/logout" id="logoutform" style="display: none">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>`
                     </form>
                     <span class="setting-container" style="width:200px">
                         <label>

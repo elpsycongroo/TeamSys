@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--Head-->
+<head>
+    <meta charset="utf-8" />
+    <title>无权访问</title>
+
+    <meta name="description" content="Error 404 - Page Not Found" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
+
+    <!-- Basic Styles -->
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/bootstrap.min.css')}" rel="stylesheet"/>
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/font-awesome.min.css')}" rel="stylesheet"/>
+
+    <link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/common_min/common_css.min.css')}" rel="stylesheet"/>
+
+    <!--Skin Script: Place this script in head to load scripts for skins and rtl support-->
+    <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/skins.min.js')}"></script>
+</head>
+<!--Head Ends-->
+<!--Body-->
+<body class="body-500"  style="background-color: #f4b400;">
+    <div class="error-header"> </div>
+    <div class="container ">
+        <section class="error-container text-center">
+            <h1 style="color: #f4b400;">无权访问</h1>
+            <div class="error-divider">
+                <h2>抱歉！</h2>
+                <p class="description">您无权访问此页面</p>
+            </div>
+            <a href="dashboard" class="return-btn"><i class="fa fa-home"></i>返回首页</a>
+        </section>
+    </div>
+    <!--Basic Scripts-->
+    <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jquery-2.0.3.min.js')}"></script>
+    <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/bootstrap.min.js')}"></script>
+
+    <!--Beyond Scripts-->
+    <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/beyond.min.js')}"></script>
+
+</body>
+<!--Body Ends-->
+</html>

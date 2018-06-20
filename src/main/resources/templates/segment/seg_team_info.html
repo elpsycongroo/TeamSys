@@ -1,0 +1,91 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title">查看队伍信息</h4>
+</div>
+
+<div class="modal-body" id="mseriesmodal_content" th:inline="text">
+    <form method="post" class="form-horizontal" id="mseriesform" role="form">
+        <p class="danger">想要对车队进行相关操作，请跳转到【我的车队】。如果组队信息未更新，请尝试注销后重新登录。</p>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">车队名称</label>
+            <div class="col-sm-7">
+                <div class="form-control">[[${team.teamName}]]</div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">车队编码</label>
+            <div class="col-sm-7">
+                <div class="form-control">[[${team.code}]]</div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">车队类型</label>
+            <div class="col-sm-7">
+                <input type="hidden" id="teamType" th:value="${team.type}"/>
+                <div class="form-control" id="teamTypeDiv"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">队长游戏ID</label>
+            <div class="col-sm-7">
+                <div class="form-control">[[${team.addUser.gameId}]]</div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">截止时间</label>
+            <div class="col-sm-7">
+                <div class="form-control" th:text="${#dates.format(team.limitTime,'yyyy-MM-dd HH:mm:ss')}"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label no-padding-right">剩余人数</label>
+            <div class="col-sm-7">
+                <div class="form-control">[[${team.posLeft}]]</div>
+            </div>
+        </div>
+        <div class="form-title">队员列表</div>
+        <div class="form-group" th:each="p : ${team.playerList}">
+            <label class="col-sm-3 control-label no-padding-right" th:text="${p.id} eq ${team.addUser.id}?'队长':'队员'"></label>
+            <div class="col-sm-7">
+                <div class="form-control">[[${p.gameId}]]</div>
+            </div>
+        </div>
+
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-default " data-dismiss="modal">返回</button>
+                <button type="button" class="btn btn-info" id="joinBtn" th:if="!${team.deleteStatus}">加入</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    jQuery(function ($) {
+        if ($("#teamType").val() === "0") {
+            $("#teamTypeDiv").html("效率");
+        } else if ($("#teamType").val() === "1") {
+            $("#teamTypeDiv").html("娱乐");
+        } else if ($("#teamType").val() === "2") {
+            $("#teamTypeDiv").html("爬线");
+        } else {
+            $("#teamTypeDiv").html("涂油");
+        }
+        $("#joinBtn").click(function () {
+            commonAjax(false, "api/joinTeam", "GET", {userId:[[${session.currentUser.id}]], teamId:[[${team.id}]]}, function(data){
+                if (data.status === "ok") {
+                    $("#commonModal").modal("hide");
+                    Notify('加入成功', 'top-right', '5000', 'success', 'fa-check', true);
+                    jQuery("#searchable").trigger("reloadGrid");
+                } else {
+                    Notify(data.msg, 'top-right', '5000', 'danger', 'fa-times', true);
+                }
+            });
+        });
+    });
+</script>

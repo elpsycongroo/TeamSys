@@ -1,10 +1,12 @@
 package com.chiba.controller;
 
+import com.chiba.bean.Constant;
 import com.chiba.bean.ResponseBean;
 import com.chiba.bean.ValidatorBean;
 import com.chiba.domain.User;
 import com.chiba.service.CustomUserService;
 import com.chiba.service.RoleService;
+import com.chiba.service.TeamService;
 import com.chiba.utils.MD5Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,9 @@ public class ApiController {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private TeamService teamService;
 
     @GetMapping("check_username")
     public ValidatorBean checkName(String username) {
@@ -60,4 +65,16 @@ public class ApiController {
     public ResponseBean editUser() {
         return new ResponseBean();
     }
+
+    @GetMapping("/joinTeam")
+    public ResponseBean joinTeam(Long teamId, Long userId) {
+        try {
+            return teamService.joinTeam(userId, teamId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
 }

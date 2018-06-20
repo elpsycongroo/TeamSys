@@ -42,7 +42,15 @@ public class User extends ExtendEntity implements UserDetails {
     @Column(name = "game_id")
     private String gameId;
 
+    /**
+     * 本日可创建车队数量
+     */
+    @Column(name = "create_oper_left")
+    private int createOperLeft;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "team_id")
+    private Team team;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")

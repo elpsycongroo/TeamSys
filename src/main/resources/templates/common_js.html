@@ -4,8 +4,13 @@
 
 <!--Beyond Scripts-->
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/beyond.min.js')}"></script>
-
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/toastr/toastr.js')}"></script>
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/validation/bootstrapValidator.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/select2/select2.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jqGrid/jquery.jqGrid.min.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jqGrid/i18n/grid.locale-cn.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/select2/i18n/select2_locale_zh-CN.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jquery.ba-resize.min.js')}"></script>
 
 <div class="bootbox modal fade modal-blue" role="dialog" style="display:none;" id="commonModal">
     <div class="modal-dialog">
@@ -135,6 +140,23 @@
             toggleAjaxLoading("end");
             if (null != functionProcess) {
                 functionProcess();
+            }
+        });
+    }
+    function formatSelection(item) {
+        return item.text + "";
+    }
+    function formatResult(item) {
+        return res = "<div style='display:inline;' idtag='" + item.id + "'>" + item.text + "</div><div style='float:right;color:#4F4F4F;display:inline'></div>";
+    }
+    function updateStatus(preURI, id, deleteStatus, grid_selector) {
+        jQuery.ajax({
+            type: "PUT",
+            url: preURI + "/" + id + "/deleteStatus",
+            data: {value: deleteStatus},
+            success: function (data) {
+                Notify('操作成功', 'top-right', '5000', 'success', 'fa-check', true);
+                jQuery(grid_selector).trigger("reloadGrid");
             }
         });
     }
