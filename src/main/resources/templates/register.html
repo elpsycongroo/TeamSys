@@ -4,7 +4,11 @@
 <!--Head-->
 
 <head th:include="common_css::head(title='注册')"/>
-
+<style>
+    .select2-results {
+        background-color: #113C5F!important;
+    }
+</style>
 <!--Head Ends-->
 <!--Body-->
 <body>
@@ -29,7 +33,7 @@
                 <input type="text" class="form-control" placeholder="邮箱" name="email"/>
             </div>
             <div class="registerbox-textbox form-group">
-                <input type="text" class="form-control" placeholder="舰队" name="clan"/>
+                <input type="hidden" id="mclan" placeholder="舰队" name="clan"/>
             </div>
             <div class="registerbox-textbox form-group">
                 <input type="text" class="form-control" placeholder="游戏ID" name="gameId"/>
@@ -59,7 +63,32 @@
 
 </body>
 <script>
-    jQuery(function($){
+    jQuery(function ($) {
+
+        $("#mclan").select2({
+            placeholder: "输入舰队标签",
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: "http://query.yahooapis.com/v1/public/yql",
+                dataType: 'jsonp',
+                quietMillis: 250,
+                data: function (term, page) {
+                    return {
+                        q: "select * from json where url=\"https://clans-south.worldofwarships.cn/clans/wows/search/api/clans/?battle_type=pvp&offset=" +
+                        (page-1)*10 + "&limit=10&search=" + term + "\"",
+                        format: "json"
+                    }
+                },
+                results: function (data, page) {
+                    var more = (page * 10) < data.query.results.json._meta_.total;
+                    return {results: data.query.results.json.clans, more: more};
+                }
+            },
+            formatResult: repoFormatResult,
+            formatSelection: repoFormatSelection
+        });
+
         $('#reg-form').bootstrapValidator({
             message: 'This value is not valid',
             feedbackIcons: {
@@ -73,10 +102,10 @@
                         notEmpty: {
                             message: '用户名不能为空'
                         },
-                        remote : {
-                            url : 'api/check_username_reg',
-                            message : "该用户名已存在",
-                            type : 'get'
+                        remote: {
+                            url: 'api/check_username_reg',
+                            message: "该用户名已存在",
+                            type: 'get'
                         },
                         stringLength: {//检测长度
                             min: 5,
@@ -113,21 +142,21 @@
                     }
                 },
                 email: {
-                    validators :{
+                    validators: {
                         emailAddress: {
                             message: '输入的email不合法'
                         }
                     }
                 },
-                verifyCode : {
+                verifyCode: {
                     validators: {
                         notEmpty: {
                             message: '验证码不能为空'
                         },
-                        remote : {
-                            url : '/kaptcha-image/verify',
-                            message : "验证码错误",
-                            type : 'get'
+                        remote: {
+                            url: '/kaptcha-image/verify',
+                            message: "验证码错误",
+                            type: 'get'
                         }
                     }
                 }
@@ -136,10 +165,10 @@
         $("#regBtn").click(function () {
             var bootstrapValidator = $('#reg-form').data('bootstrapValidator');
             bootstrapValidator.validate();
-            if(bootstrapValidator.isValid()){
+            if (bootstrapValidator.isValid()) {
                 //表单提交的方法、比如ajax提交
                 var data = $("#reg-form").serialize();
-                commonAjax(false, "/api/register","POST",data,function(resp){
+                commonAjax(false, "/api/register", "POST", data, function (resp) {
                     if (eval(resp).status == "ok") {
                         alert("注册成功，请登录！");
                         window.location.href = "login";
@@ -150,6 +179,13 @@
     });
     function refreshCode() {
         jQuery("#code_img").attr("src", "/kaptcha-image?_=" + new Date().getTime());
+    }
+    function repoFormatResult(repo) {
+        return "<div><span style=\"color:" + repo.hex_color + ";font-weight: bold;\">[" +
+            repo.tag + "]</span>" + "<span style='color: white'>" + repo.name + "</span></div>";
+    }
+    function repoFormatSelection(repo) {
+        return repo.tag;
     }
 </script>
 <!--Body Ends-->
