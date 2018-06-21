@@ -29,21 +29,6 @@ public class UserController {
     @Autowired
     private CustomUserService userService;
 
-    @GetMapping("/api/user/name")
-    @ResponseBody
-    public String getUserList (String username, Integer rows, Integer page, String sidx, String sord) {
-        try {
-            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
-            selectBean.getParam().put("username", URLDecoder.decode(username, "UTF-8"));
-            Page<User> userPage = userService.getUserList(selectBean);
-            return userService.getJsonResult(userPage, Constant.JSON_USER_TYPE_SELECT_NAME);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return "error";
-        }
-    }
-
     @GetMapping("/user/team")
     public String showPrivateTeamPage(ModelMap map) {
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

@@ -78,5 +78,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and().rememberMe()
                 .and().logout().permitAll().logoutSuccessUrl("/login");
         http.addFilterBefore(customSecurityInterceptor, FilterSecurityInterceptor.class);
+
+        http.sessionManagement().maximumSessions(1).expiredUrl("/login");
     }
 }

@@ -28,45 +28,11 @@ public class TeamController {
 
     @Autowired
     private TeamService teamService;
-    @Autowired
-    private CustomUserService userService;
-
-    @GetMapping("/api/teams")
-    @ResponseBody
-    public String getTeamList(String teamName, Integer deleteStatus, Long leader, Integer type, Integer rows, Integer page, String sidx, String sord) {
-        try {
-            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
-            if (!SysUtils.isEmpty(teamName)) {
-                selectBean.getParam().put("teamName", URLDecoder.decode(teamName, "UTF-8"));
-            }
-            if (leader != null) {
-                selectBean.getParam().put("leader", userService.getUserById(leader).isPresent() ? userService.getUserById(leader).get() : null);
-            }
-            if (null != deleteStatus) {
-                selectBean.getParam().put("deleteStatus", deleteStatus);
-            }
-            if (null != type) {
-                selectBean.getParam().put("type", type);
-            }
-            Page<Team> teamPage = teamService.getTeamList(selectBean);
-            return teamService.getJsonResult(teamPage);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return "error";
-        }
-    }
 
     @GetMapping("teams/segment_team_info")
     public String showTeamInfoPage(Long teamId, ModelMap map) {
         Team team = teamService.getTeamById(teamId);
         map.put("team", team);
         return "segment/seg_team_info";
-    }
-
-    @PutMapping("/api/leaveTeam")
-    @ResponseBody
-    public ResponseBean leaveTeam(Long teamId, Long userId) {
-        return teamService.leaveTeam(userId, teamId);
     }
 }

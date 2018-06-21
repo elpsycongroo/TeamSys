@@ -128,6 +128,7 @@ public class TeamService {
     private synchronized void joinTeamSync(User user, Team team) {
         user.setTeam(team);
         team.setPosLeft(team.getPosLeft() - 1);
+        user.setCreateOperLeft(user.getCreateOperLeft() - 1);
         userRepository.save(user);
         teamRepository.save(team);
     }

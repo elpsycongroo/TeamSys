@@ -2,15 +2,21 @@ package com.chiba.controller;
 
 import com.chiba.bean.Constant;
 import com.chiba.bean.ResponseBean;
+import com.chiba.bean.SelectBean;
 import com.chiba.bean.ValidatorBean;
+import com.chiba.domain.Team;
 import com.chiba.domain.User;
 import com.chiba.service.CustomUserService;
 import com.chiba.service.RoleService;
 import com.chiba.service.TeamService;
 import com.chiba.utils.MD5Util;
+import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URLDecoder;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -61,12 +67,53 @@ public class ApiController {
         return new ResponseBean();
     }
 
-    @PutMapping("/user")
+    //========================================USER========================================
+    @GetMapping("/users/name")
+    public String getUserList (String username, Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            selectBean.getParam().put("username", URLDecoder.decode(username, "UTF-8"));
+            Page<User> userPage = userService.getUserList(selectBean);
+            return userService.getJsonResult(userPage, Constant.JSON_USER_TYPE_SELECT_NAME);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
+    }
+
+    @PutMapping("/users")
     public ResponseBean editUser() {
         return new ResponseBean();
     }
 
-    @GetMapping("/joinTeam")
+    //========================================TEAM========================================
+    @GetMapping("/teams")
+    public String getTeamList(String teamName, Integer deleteStatus, Long leader, Integer type, Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            if (!SysUtils.isEmpty(teamName)) {
+                selectBean.getParam().put("teamName", URLDecoder.decode(teamName, "UTF-8"));
+            }
+            if (leader != null) {
+                selectBean.getParam().put("leader", userService.getUserById(leader).isPresent() ? userService.getUserById(leader).get() : null);
+            }
+            if (null != deleteStatus) {
+                selectBean.getParam().put("deleteStatus", deleteStatus);
+            }
+            if (null != type) {
+                selectBean.getParam().put("type", type);
+            }
+            Page<Team> teamPage = teamService.getTeamList(selectBean);
+            return teamService.getJsonResult(teamPage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
+    }
+
+    @PostMapping("/teams/join")
     public ResponseBean joinTeam(Long teamId, Long userId) {
         try {
             return teamService.joinTeam(userId, teamId);
@@ -75,6 +122,11 @@ public class ApiController {
             log.error(e.getMessage());
             return new ResponseBean(Constant.FAILED, "出现异常");
         }
+    }
+
+    @PutMapping("/teams/leave")
+    public ResponseBean leaveTeam(Long teamId, Long userId) {
+        return teamService.leaveTeam(userId, teamId);
     }
 
 }

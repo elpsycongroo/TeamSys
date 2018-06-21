@@ -77,7 +77,7 @@
             $("#teamTypeDiv").html("涂油");
         }
         $("#joinBtn").click(function () {
-            commonAjax(false, "api/joinTeam", "GET", {userId:[[${session.currentUser.id}]], teamId:[[${team.id}]]}, function(data){
+            commonAjax(false, "api/teams/join", "POST", {userId:[[${session.currentUser.id}]], teamId:[[${team.id}]]}, function(data){
                 if (data.status === "ok") {
                     $("#commonModal").modal("hide");
                     Notify('加入成功', 'top-right', '5000', 'success', 'fa-check', true);

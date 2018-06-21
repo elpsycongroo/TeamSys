@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +21,10 @@ import java.util.List;
 @Data
 @Table(name = "sys_user")
 @ToString
-public class User extends ExtendEntity implements UserDetails {
+public class User extends ExtendEntity implements UserDetails, Serializable {
+
+    private static final long serialVersionUID = 7021091094681733360L;
+
     @Column(name = "username", unique = true, nullable = false)
     private String username;
 
@@ -84,4 +88,15 @@ public class User extends ExtendEntity implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    @Override
+    public boolean equals(Object rhs) {
+        return rhs instanceof User && username.equals(((User) rhs).username);
+    }
+
+    @Override
+    public int hashCode() {
+        return username.hashCode();
+    }
+
 }
