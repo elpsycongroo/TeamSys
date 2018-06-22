@@ -22,6 +22,12 @@
                         <li class="open">
                             <div class="login-area" style="cursor: default;">
                                 <section>
+                                    <span class="profile" style="color:white;margin-left: 10px;float: left;">欢迎您，</span>
+                                    <span th:if="${session.currentUser.clan} ne null">
+                                        <b th:text="|[${session.currentUser.clan}]|"></b>
+                                    </span>
+                                </section>
+                                <section>
                                     <span class="profile">
                                         <span class="propfile" style="float: left;">
                                             <b style="color:black" th:text="${session.currentUser.trueName}"></b>
@@ -29,9 +35,6 @@
                                         <input type="hidden" id="currentUserRoleId"
                                                th:value="${session.currentUser.role} ne null? ${session.currentUser.role.id} : '0'"/>
                                     </span>
-                                </section>
-                                <section>
-                                    <span class="profile" style="color:white;margin-left: 10px;float: left;">欢迎登录组队系统</span>
                                 </section>
                             </div>
                             <!--Login Area Dropdown-->

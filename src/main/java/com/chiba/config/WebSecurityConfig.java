@@ -67,7 +67,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().ignoringAntMatchers("/login", "/register", "/kaptcha-image/**");
+        http.csrf().ignoringAntMatchers("/login", "/register", "/kaptcha-image/**", "/api/register");
         http.authorizeRequests()
                 .antMatchers(
                         "/kaptcha-image/**", "/register", "/api/**").permitAll()

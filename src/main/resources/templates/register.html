@@ -87,6 +87,8 @@
             },
             formatResult: repoFormatResult,
             formatSelection: repoFormatSelection
+        }).on("change", function () {
+            $("#mclan").val($(this).select2("data").tag);
         });
 
         $('#reg-form').bootstrapValidator({
@@ -111,7 +113,7 @@
                             min: 5,
                             max: 15,
                             message: '长度必须在5-15之间'
-                        },
+                        }
                     }
                 },
                 password: {

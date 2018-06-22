@@ -3,10 +3,12 @@ package com.chiba.service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.chiba.bean.Constant;
+import com.chiba.bean.ResponseBean;
 import com.chiba.bean.SelectBean;
 import com.chiba.dao.UserRepository;
 import com.chiba.domain.Team;
 import com.chiba.domain.User;
+import com.chiba.utils.MD5Util;
 import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -99,5 +102,42 @@ public class CustomUserService implements UserDetailsService {
     public Team getTeamByUserName(String username) {
         User user = userRepository.findByUsername(username);
         return user.getTeam();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean changePwd(User user) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        ResponseBean responseBean = new ResponseBean();
+        if (!userDetails.getUsername().equals(user.getUsername())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("只有用户自己才能修改自己的密码，你究竟是谁？");
+        } else if (!userDetails.getPassword().equals(MD5Util.encode(user.getTrueName()))) {
+            //用trueName存储原密码。。懒。。
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("记不住自己密码了？尝试使用邮箱找回吧！");
+        } else {
+            String newPwd = user.getPassword();
+            user = userRepository.findByUsername(user.getUsername());
+            user.setPassword(MD5Util.encode(newPwd));
+        }
+        return responseBean;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean editUserInfo(User user) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User originUser = userRepository.findByUsername(userDetails.getUsername());
+        ResponseBean responseBean = new ResponseBean();
+        if (!originUser.getUsername().equals(user.getUsername())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("校验失败，请尝试注销后重新登录");
+        } else {
+            originUser.setTrueName(user.getTrueName());
+            originUser.setClan(user.getClan());
+            originUser.setEmail(user.getEmail());
+            originUser.setGameId(user.getGameId());
+            userRepository.save(originUser);
+        }
+        return responseBean;
     }
 }

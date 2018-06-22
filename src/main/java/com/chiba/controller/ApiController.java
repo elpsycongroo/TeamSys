@@ -14,6 +14,7 @@ import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLDecoder;
@@ -62,7 +63,9 @@ public class ApiController {
     @PostMapping("register")
     public ResponseBean register(User user) {
         user.setPassword(MD5Util.encode(user.getPassword()));
-        user.setRole(roleService.findByCode("user"));
+        user.setRole(roleService.findByCode("ROLE_user"));
+        user.setTrueName(user.getUsername());
+        user.setCreateOperLeft(3);
         userService.saveUser(user);
         return new ResponseBean();
     }
@@ -79,6 +82,28 @@ public class ApiController {
             e.printStackTrace();
             log.error(e.getMessage());
             return "error";
+        }
+    }
+
+    @PutMapping("/users/pwd")
+    public ResponseBean changePwd (User user) {
+        try {
+            return userService.changePwd(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @PutMapping("/users/info")
+    public ResponseBean changeUsersInfo(User user) {
+        try {
+            return userService.editUserInfo(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
         }
     }
 
@@ -124,7 +149,7 @@ public class ApiController {
         }
     }
 
-    @PutMapping("/teams/leave")
+    @PostMapping("/teams/leave")
     public ResponseBean leaveTeam(Long teamId, Long userId) {
         return teamService.leaveTeam(userId, teamId);
     }

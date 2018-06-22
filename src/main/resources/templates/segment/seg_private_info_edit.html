@@ -1,0 +1,156 @@
+<style>
+    .select2-results {
+        background-color: #113C5F!important;
+    }
+</style>
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title">修改个人信息</h4>
+</div>
+<div class="modal-body" id="musermodal_content">
+    <form class="form-horizontal" id="muserinfoform" role="form">
+        <div class="form-group">
+            <label class="col-sm-2 control-label no-padding-right">用户名
+            </label>
+            <div class="col-sm-7">
+                <input type="hidden" name="username" th:value="${session.currentUser.username}" />
+                <div class="form-control" th:text="${session.currentUser.username}"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="trueName" class="col-sm-2 control-label no-padding-right">昵称
+            </label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" name="trueName" id="trueName"
+                       th:value="${user.trueName} ne null ? ${user.trueName}"
+                       placeholder="不填写昵称将无法获得个性导航栏欢迎语">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email" class="col-sm-2 control-label no-padding-right">Email</label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" name="email" id="email"
+                       th:value="${user.email} ne null ? ${user.email}"
+                       placeholder="不填写Email将无法使用找回功能">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="clan" class="col-sm-2 control-label no-padding-right">军团</label>
+            <div class="col-sm-7">
+                <input type="hidden" id="clan" placeholder="不填写军团将无法使用后续军团有关功能" name="clan"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="gameId" class="col-sm-2 control-label no-padding-right">游戏ID<span
+                    style="color: brown">&nbsp;*</span></label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" name="gameId" id="gameId"
+                       th:value="${user.gameId} ne null ? ${user.gameId}"
+                       placeholder="不填写游戏ID将无法使用组队功能">
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info" id="regBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    jQuery(function ($) {
+        $("#clan").select2({
+            placeholder: "输入舰队标签",
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: "http://query.yahooapis.com/v1/public/yql",
+                dataType: 'jsonp',
+                quietMillis: 250,
+                data: function (term, page) {
+                    return {
+                        q: "select * from json where url=\"https://clans-south.worldofwarships.cn/clans/wows/search/api/clans/?battle_type=pvp&offset=" +
+                        (page-1)*10 + "&limit=10&search=" + term + "\"",
+                        format: "json"
+                    }
+                },
+                results: function (data, page) {
+                    var more = (page * 10) < data.query.results.json._meta_.total;
+                    return {results: data.query.results.json.clans, more: more};
+                }
+            },
+            formatResult: repoFormatResult,
+            formatSelection: repoFormatSelection
+        }).on("change", function () {
+            $("#clan").val($(this).select2("data").tag);
+        });
+
+        $('#muserinfoform').bootstrapValidator({
+            message: 'This value is not valid',
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                trueName: {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 3,
+                            max: 8,
+                            message: '长度必须在3-8之间'
+                        }
+                    }
+                },
+                gameId: {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 3,
+                            max: 15,
+                            message: '长度必须在3-15之间'
+                        }
+                    }
+                },
+                email: {
+                    validators: {
+                        emailAddress: {
+                            message: '输入的email不合法'
+                        }
+                    }
+                }
+            }
+        });
+        $("#regBtn").click(function () {
+            var bootstrapValidator = $('#muserinfoform').data('bootstrapValidator');
+            bootstrapValidator.validate();
+            if (bootstrapValidator.isValid()) {
+                //表单提交的方法、比如ajax提交
+                var data = $("#muserinfoform").serialize();
+                commonAjax(false, "/api/users/info", "PUT", data, function (resp) {
+                    if (eval(resp).status == "ok") {
+                        alert("修改成功！部分功能将在重新登录后生效");
+                        location.reload();
+                    } else {
+                        alert(resp.msg);
+                    }
+                });
+            }
+        });
+    });
+    function repoFormatResult(repo) {
+        return "<div><span style=\"color:" + repo.hex_color + ";font-weight: bold;\">[" +
+            repo.tag + "]</span>" + "<span style='color: white'>" + repo.name + "</span></div>";
+    }
+    function repoFormatSelection(repo) {
+        return repo.tag;
+    }
+</script>

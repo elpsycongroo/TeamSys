@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,16 +25,35 @@ import java.net.URLDecoder;
  *****************************************/
 @Controller
 @Slf4j
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     private CustomUserService userService;
 
-    @GetMapping("/user/team")
+    @GetMapping("/team")
     public String showPrivateTeamPage(ModelMap map) {
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         map.addAttribute("team", userService.getTeamByUserName(user.getUsername()));
         return "private_team";
     }
 
+    @GetMapping("/info")
+    public String showUserInfo(ModelMap map) {
+        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        map.addAttribute("user", userService.findUserByUsername(user.getUsername()));
+        return "private_info";
+    }
+
+    @GetMapping("/segment_user_pwdinfo")
+    public String showPwdInfoPage() {
+        return "segment/seg_user_pwd_info";
+    }
+
+    @GetMapping("/segment_info_edit")
+    public String showPrivateInfoPage(ModelMap map) {
+        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        map.addAttribute("user", userService.findUserByUsername(user.getUsername()));
+        return "segment/seg_private_info_edit";
+    }
 }

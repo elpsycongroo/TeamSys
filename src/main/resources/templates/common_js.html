@@ -160,4 +160,17 @@
             }
         });
     }
+
+    function showPwdInfo() {
+        jQuery.ajax({
+            type: "GET",
+            url: "/users/segment_user_pwdinfo",
+            data: {},
+            dataType: "html",
+            success: function (data) {
+                jQuery("#pwd_segment_modal").html(data);
+                jQuery("#pwdModal").modal("show");
+            }
+        });
+    }
 </script>

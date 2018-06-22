@@ -139,7 +139,7 @@
 </div>
 </div>
 <footer th:replace="common_js"/>
-<script th:inline="javascript">
+<script th:inline="javascript" th:if="${team} ne null">
     jQuery(function ($) {
         if ($("#teamType").val() === "0") {
             $("#teamTypeDiv").html("效率");
@@ -154,7 +154,7 @@
         $("#getOutBtn").click(function () {
             var r = confirm("确认跳车吗？这将扣除你本日创建和加入车队的可用次数！(已过截止时间的车队，将不会扣除)");
             if (r) {
-                commonAjax(false, "/api/teams/leave", "PUT", {userId:[[${session.currentUser.id}]], teamId:[[${team.id}]]}, function(data){
+                commonAjax(false, "/api/teams/leave", "POST", {userId:[[${session.currentUser.id}]], teamId:[[${team.id}]]}, function(data){
                     if (data.status === "ok") {
                         alert("跳车成功！剩余本日可加入和创建车队次数：" + data.msg);
                         location.reload();

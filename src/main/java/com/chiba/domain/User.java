@@ -31,19 +31,16 @@ public class User extends ExtendEntity implements UserDetails, Serializable {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "dept")
-    private String dept;
-
     @Column(name = "true_name")
     private String trueName;
 
     @Column(name = "clan")
     private String clan;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "game_id")
+    @Column(name = "game_id", unique = true)
     private String gameId;
 
     /**
