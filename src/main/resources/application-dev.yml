@@ -37,8 +37,17 @@ spring:
     database: 0
   session:
     store-type: redis
-
-
+  mail:
+    host: smtp.163.com
+    username: wobuxindelete@163.com
+    password: *******
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 kaptcha:
   session:
     key: kaptcha.code

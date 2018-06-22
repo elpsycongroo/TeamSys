@@ -107,6 +107,17 @@ public class ApiController {
         }
     }
 
+    @PostMapping("/users/email")
+    public ResponseBean sendEmailTest() {
+        try {
+            return userService.sendEmail();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
     @PutMapping("/users")
     public ResponseBean editUser() {
         return new ResponseBean();

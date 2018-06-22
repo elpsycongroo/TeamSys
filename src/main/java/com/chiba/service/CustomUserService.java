@@ -3,8 +3,10 @@ package com.chiba.service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.chiba.bean.Constant;
+import com.chiba.bean.EmailBean;
 import com.chiba.bean.ResponseBean;
 import com.chiba.bean.SelectBean;
+import com.chiba.config.MailConfig;
 import com.chiba.dao.UserRepository;
 import com.chiba.domain.Team;
 import com.chiba.domain.User;
@@ -38,6 +40,8 @@ public class CustomUserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private MailConfig mailConfig;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -139,5 +143,14 @@ public class CustomUserService implements UserDetailsService {
             userRepository.save(originUser);
         }
         return responseBean;
+    }
+
+    public ResponseBean sendEmail() throws Exception {
+        EmailBean emailBean = new EmailBean();
+        emailBean.setContent("<h3>您的激活邮箱链接为——请勿公开！</h3>");
+        emailBean.setReceiver("wobuxindelete@qq.com");
+        emailBean.setSubject("邮箱激活邮件——感谢您注册窝窝屎组队系统");
+        mailConfig.sendHtmlMail(emailBean);
+        return new ResponseBean();
     }
 }
