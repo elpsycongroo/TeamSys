@@ -147,6 +147,14 @@
                     validators: {
                         emailAddress: {
                             message: '输入的email不合法'
+                        },
+                        remote: {
+                            url: 'api/check_email_reg',
+                            message: "该邮箱已存在",
+                            type: 'get'
+                        },
+                        notEmpty: {
+                            message: '邮箱不能为空'
                         }
                     }
                 },

@@ -40,13 +40,18 @@
                                     <div class="col-lg-12 col-sm-12 col-xs-12">
                                         <ol>
                                         <li class="danger" th:if="${user.email} eq null or ${user.email} eq ''">填写邮箱可以帮助您找回密码和接受通知</li>
+                                            <li class="warning" th:if="${!user.emailValidation} and ${user.email} ne null and ${user.email} ne ''">
+                                                您的邮箱尚未验证，无法接受通知和找回密码
+                                                <div id="emailValidBtn" class="btn btn-success"><i class="fa fa-check"></i>立即验证</div>
+                                            </li>
                                         <li class="danger" th:if="${user.clan} eq null or ${user.clan} eq ''">填写军团可以帮助其他玩家更好的了解你</li>
                                         <li class="danger" th:if="${user.gameId} eq null or ${user.gameId} eq ''">填写游戏ID可以让您使用本系统组队开车</li>
                                         <li class="danger" th:if="${user.trueName} eq null or ${user.trueName} eq ''">填写昵称可以更改导航栏上的欢迎名字，当然这并没有什么卵用</li>
                                         <li class="success"
                                               th:if="${user.gameId} ne null and ${user.gameId} ne ''
                                                and ${user.clan} ne null and ${user.clan} ne ''
-                                               and ${user.email} ne null and ${user.email} ne ''">
+                                               and ${user.email} ne null and ${user.email} ne ''
+                                               and ${user.emailValidation}">
                                             您的信息非常完整，有助您使用本系统的全部功能
                                         </li>
                                             <li class="success">修改密码功能藏在右上角的齿轮后面</li>
@@ -65,8 +70,10 @@
                                             <div class="form-control" th:text="${user.trueName}"></div>
                                         </div>
                                         <div class="col-xs-4">
-                                            <label>邮箱</label>
-                                            <div class="form-control" th:text="${user.email}">还没有填写邮箱</div>
+                                            <label>
+                                                邮箱<th:block th:text="${user.emailValidation} ? '(已验证)' : '(未验证)'"></th:block>
+                                            </label>
+                                            <div class="form-control" th:text="${user.email}"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -88,9 +95,6 @@
                                     <div class="col-lg-12 col-sm-12 col-xs-12">
                                         <div class="btn btn-warning" id="editBtn"
                                              style="float: right;margin-right: 10px"><i class="fa fa-edit"></i>编辑信息
-                                        </div>
-                                        <div class="btn btn-info" id="sendBtn"
-                                             style="float: right;margin-right: 10px"><i class="fa fa-edit"></i>发送邮件
                                         </div>
                                     </div>
                                 </div>
@@ -117,11 +121,14 @@
                 $("#segment_modal").html(data);
             })
         });
-        $("#sendBtn").click(function () {
-            commonAjax(null, "/api/users/email", "POST", null, function (data) {
+        $("#emailValidBtn").click(function () {
+            commonAjax(false, "/api/users/email_address", "POST", null, function(data) {
                 alert(data.msg);
+                if (data.msg === "success") {
+                    location.reload();
+                }
             })
-        })
+        });
     });
 </script>
 

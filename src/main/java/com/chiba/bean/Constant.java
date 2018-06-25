@@ -6,6 +6,9 @@ package com.chiba.bean;
  *  Description: 
  *****************************************/
 public class Constant {
+
+    public static final String HOST = "http://localhost:8080";
+
     public static final String OK = "ok";
     public static final String FAILED = "failed";
     public static final String SUCCESS = "success";

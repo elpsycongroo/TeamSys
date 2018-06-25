@@ -70,7 +70,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().ignoringAntMatchers("/login", "/register", "/kaptcha-image/**", "/api/register");
         http.authorizeRequests()
                 .antMatchers(
-                        "/kaptcha-image/**", "/register", "/api/**").permitAll()
+                        "/kaptcha-image/**", "/register", "/api/**", "/users/email/verify_address**").permitAll()
                 .anyRequest().authenticated()
                 .and().logout().logoutUrl("/logout").permitAll().logoutSuccessUrl("/login")//定义logout不需要验证
                 .and().addFilterBefore(new LoginAuthenticationFilter("/login", "/login?error", customUserService(), resourceService()), UsernamePasswordAuthenticationFilter.class)

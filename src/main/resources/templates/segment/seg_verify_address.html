@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>验证页面</title>
+</head>
+<body>
+    <input type="hidden" id="status" th:value="${data.status}"/>
+    <input type="hidden" id="msg" th:value="${data.msg}">
+</body>
+
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/jquery-2.0.3.min.js')}"></script>
+<script>
+    jQuery(function ($) {
+       if ($("#status").val() === "ok") {
+           alert("邮箱验证成功，如状态未更新，请注销后重新登录");
+       } else {
+           alert($("#msg").val());
+       }
+        window.location.href = "/users/info";
+    });
+</script>
+</html>

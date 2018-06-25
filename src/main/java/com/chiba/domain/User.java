@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /*****************************************
@@ -42,6 +43,42 @@ public class User extends ExtendEntity implements UserDetails, Serializable {
 
     @Column(name = "game_id", unique = true)
     private String gameId;
+
+    /**
+     * 邮箱是否验证过
+     */
+    @Column(name = "email_validation", nullable = false)
+    private boolean emailValidation;
+
+    /**
+     * 数据库中存储本次校验key
+     */
+    @Column(name = "email_validation_key")
+    private String emailValidationKey;
+
+    /**
+     * 校验key生成时间
+     */
+    @Column(name = "key_gen_time")
+    private Date keyGenTime;
+
+    /**
+     * 忘记密码校验key
+     */
+    @Column(name = "forget_key")
+    private String forgetKey;
+
+    /**
+     * 忘记密码校验key是否被使用过
+     */
+    @Column(name = "forget_key_valid", nullable = false)
+    private boolean forgetKeyValid;
+
+    /**
+     * 忘记密码校验key生成时间
+     */
+    @Column(name = "forget_key_gen_time")
+    private Date forgetKeyGenTime;
 
     /**
      * 本日可创建车队数量

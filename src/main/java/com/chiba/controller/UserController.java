@@ -56,4 +56,10 @@ public class UserController {
         map.addAttribute("user", userService.findUserByUsername(user.getUsername()));
         return "segment/seg_private_info_edit";
     }
+
+    @GetMapping("/email/verify_address")
+    public String verifyAddress(String username, String link, ModelMap map) {
+        map.put("data", userService.verifyEmailKey(username, link));
+        return "segment/seg_verify_address";
+    }
 }

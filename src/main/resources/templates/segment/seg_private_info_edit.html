@@ -34,7 +34,7 @@
             <div class="col-sm-7">
                 <input type="text" class="form-control" name="email" id="email"
                        th:value="${user.email} ne null ? ${user.email}"
-                       placeholder="不填写Email将无法使用找回功能">
+                       placeholder="不填写Email将无法使用找回和通知组队功能">
             </div>
         </div>
 
@@ -124,6 +124,14 @@
                     validators: {
                         emailAddress: {
                             message: '输入的email不合法'
+                        },
+                        remote: {
+                            url: '/api/check_email_reg',
+                            message: "该邮箱已存在",
+                            type: 'get'
+                        },
+                        notEmpty: {
+                            message: '邮箱不能为空'
                         }
                     }
                 }

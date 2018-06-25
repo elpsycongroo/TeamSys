@@ -60,12 +60,22 @@ public class ApiController {
         return new ValidatorBean(false);
     }
 
+    @GetMapping("check_email_reg")
+    public ValidatorBean checkEmailReg(String email) {
+        if (null != userService.getUserByEmail(email)) {
+            return new ValidatorBean(false);
+        }
+        return new ValidatorBean(true);
+    }
+
     @PostMapping("register")
     public ResponseBean register(User user) {
         user.setPassword(MD5Util.encode(user.getPassword()));
         user.setRole(roleService.findByCode("ROLE_user"));
         user.setTrueName(user.getUsername());
         user.setCreateOperLeft(3);
+        user.setEmailValidation(false);
+        user.setForgetKeyValid(false);
         userService.saveUser(user);
         return new ResponseBean();
     }
@@ -107,10 +117,10 @@ public class ApiController {
         }
     }
 
-    @PostMapping("/users/email")
-    public ResponseBean sendEmailTest() {
+    @PostMapping("/users/email_address")
+    public ResponseBean sendValidateEmailAddress() {
         try {
-            return userService.sendEmail();
+            return userService.sendEmailAddressValidateEmail();
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

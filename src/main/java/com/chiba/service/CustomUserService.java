@@ -61,6 +61,10 @@ public class CustomUserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
+    public User getUserByEmail(String email){
+        return userRepository.findByEmail(email);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void saveUser(User user) {
         userRepository.save(user);
@@ -145,12 +149,69 @@ public class CustomUserService implements UserDetailsService {
         return responseBean;
     }
 
-    public ResponseBean sendEmail() throws Exception {
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean sendEmailAddressValidateEmail() throws Exception {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = findUserByUsername(userDetails.getUsername());
+        Calendar now = Calendar.getInstance();
+        Date nowDate = new Date();
+        now.setTime(nowDate);
+        Calendar genTime = Calendar.getInstance();
+        genTime.setTime(user.getKeyGenTime());
+        genTime.add(Calendar.MINUTE, 5);
+        //下次发送的最早时间(5分钟）
+        Date nextEmailDate = genTime.getTime();
+        ResponseBean responseBean = new ResponseBean();
+        if (SysUtils.isEmpty(user.getEmail())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("请先填写邮箱");
+        }
+        if (user.isEmailValidation()) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("该邮箱已验证过，不需要再次验证");
+        } else if (nextEmailDate.after(nowDate)) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("验证邮件最小发送间隔为5分钟，请等待");
+        } else {
+            //发送邮件
+            user = sendValidEmail(user);
+            userRepository.save(user);
+        }
+        return responseBean;
+    }
+
+    private User sendValidEmail(User user) throws Exception {
+        Date nowDate = new Date();
+        String link = MD5Util.encode(UUID.randomUUID().toString());
         EmailBean emailBean = new EmailBean();
-        emailBean.setContent("<h3>您的激活邮箱链接为——请勿公开！</h3>");
-        emailBean.setReceiver("wobuxindelete@qq.com");
+        emailBean.setContent("<h3>您的激活邮箱链接为<br><a herf='" + Constant.HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "'>" + Constant.HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "</a><br>该链接30分钟内有效，激活后您可获得组队通知推送，请勿公开！</h3>" +
+                "<br>(如不能直接打开链接，请复制到浏览器后打开)<br>窝窝屎组队系统");
+        emailBean.setReceiver(user.getEmail());
         emailBean.setSubject("邮箱激活邮件——感谢您注册窝窝屎组队系统");
         mailConfig.sendHtmlMail(emailBean);
-        return new ResponseBean();
+        user.setEmailValidation(false);
+        user.setEmailValidationKey(link);
+        user.setKeyGenTime(nowDate);
+        return user;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean verifyEmailKey(String username, String key) {
+        User user = userRepository.findByUsernameAndEmailValidationKey(username, key);
+        if (null != user && !user.isEmailValidation()) {
+            Calendar lastValidTime = Calendar.getInstance();
+            lastValidTime.setTime(user.getKeyGenTime());
+            lastValidTime.add(Calendar.MINUTE, 30);
+            if (new Date().before(lastValidTime.getTime())) {
+                user.setEmailValidation(true);
+                userRepository.save(user);
+                return new ResponseBean();
+            } else {
+                return new ResponseBean(Constant.FAILED, "该链接已经过期，请重新发送验证链接");
+            }
+        }
+        return new ResponseBean(Constant.FAILED, "该链接已被使用或该用户不存在，请核实");
     }
 }
