@@ -3,8 +3,10 @@ package com.chiba.service;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.chiba.bean.Constant;
+import com.chiba.bean.EmailBean;
 import com.chiba.bean.ResponseBean;
 import com.chiba.bean.SelectBean;
+import com.chiba.config.MailConfig;
 import com.chiba.dao.TeamRepository;
 import com.chiba.dao.UserRepository;
 import com.chiba.domain.Team;
@@ -16,6 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +39,8 @@ public class TeamService {
     private TeamRepository teamRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private MailConfig mailConfig;
 
     public Team getTeamById(Long id) {
         return teamRepository.getOne(id);
@@ -97,11 +104,16 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseBean joinTeam(Long userId, Long teamId) {
+    public ResponseBean joinTeam(Long userId, Long teamId) throws Exception {
         ResponseBean responseBean = new ResponseBean();
         User user = userRepository.getOne(userId);
         Team team = teamRepository.getOne(teamId);
         Date now = new Date();
+        if (SysUtils.isEmpty(user.getGameId())) {
+            //判断该user是否填写游戏ID
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("您没有填写游戏ID，无法加入队伍");
+        }
         if (user.getTeam() != null) {
             //判断该user是否已经加入其它队伍
             responseBean.setStatus(Constant.FAILED);
@@ -113,7 +125,7 @@ public class TeamService {
         } else if (team.isDeleteStatus() || now.after(team.getLimitTime())) {
             //判断是否已过截止时间
             responseBean.setStatus(Constant.FAILED);
-            responseBean.setMsg("该队伍已过截止时间或已被关闭，请选择其它队伍");
+            responseBean.setMsg("该队伍已过截止时间或已被解散，请选择其它队伍");
         } else if (user.getCreateOperLeft() < 1) {
             //判断是否达到创建和加入次数上限
             responseBean.setStatus(Constant.FAILED);
@@ -121,6 +133,7 @@ public class TeamService {
         } else {
             //处理加入逻辑 避免踩同步坑
             joinTeamSync(user, team);
+            sendJoinTeamEmail(team, user);
         }
         return responseBean;
     }
@@ -134,7 +147,7 @@ public class TeamService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ResponseBean leaveTeam(Long userId, Long teamId) {
+    public ResponseBean leaveTeam(Long userId, Long teamId) throws Exception {
         ResponseBean responseBean = new ResponseBean();
         User user = userRepository.getOne(userId);
         Team team = teamRepository.getOne(teamId);
@@ -148,6 +161,7 @@ public class TeamService {
             responseBean.setMsg("您是该队伍的队长，不能通过该方式退出队伍，或您的打开方式不对");
         } else {
             leaveTeamSync(user, team);
+            sendLeaveTeamEmail(team, user);
             responseBean.setMsg(String.valueOf(user.getCreateOperLeft()));
         }
         return responseBean;
@@ -162,5 +176,71 @@ public class TeamService {
         team.setPosLeft(team.getPosLeft() + 1);
         userRepository.save(user);
         teamRepository.save(team);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean kickoutTeam(Long teamId, Long userId) throws Exception {
+        Team team = teamRepository.getOne(teamId);
+        User kickUser = userRepository.getOne(userId);
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User leader = userRepository.findByUsername(userDetails.getUsername());
+        ResponseBean responseBean = new ResponseBean();
+        if (userId.equals(leader.getId())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("你不能踢出自己，停止你的骚操作");
+        } else if (!team.getAddUser().getId().equals(leader.getId())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("你不是该小队的队长");
+        } else if (team.isDeleteStatus()) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("该队伍已经截止或解散");
+        } else {
+            kickUser.setTeam(null);
+            team.setPosLeft(team.getPosLeft() + 1);
+            sendKickOutTeamEmail(team, kickUser);
+        }
+        return responseBean;
+    }
+
+    @Async
+    private void sendJoinTeamEmail(Team team, User joinUser) throws Exception {
+        User leader = team.getAddUser();
+        if (null != leader && null != leader.getEmail() && leader.isEmailValidation()) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>新队员 " + (SysUtils.isEmpty(joinUser.getClan()) ? "" : "[" + joinUser.getClan() + "]") +
+                    joinUser.getGameId() + " 加入了您的队伍【" + team.getTeamName() + "】！" + "<br>目前您的队伍尚余空位：" + team.getPosLeft() +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setReceiver(leader.getEmail());
+            emailBean.setSubject("有队员加入了你的队伍！——感谢您使用窝窝屎组队系统");
+            mailConfig.sendHtmlMail(emailBean);
+        }
+    }
+
+    @Async
+    private void sendLeaveTeamEmail(Team team, User leftUser) throws Exception {
+        User leader = team.getAddUser();
+        if (null != leader && null != leader.getEmail() && leader.isEmailValidation()) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>队员 " + (SysUtils.isEmpty(leftUser.getClan()) ? "" : "[" + leftUser.getClan() + "]") +
+                    leftUser.getGameId() + " 退出了您的队伍【" + team.getTeamName() + "】！" + "<br>目前您的队伍尚余空位：" + team.getPosLeft() +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setReceiver(leader.getEmail());
+            emailBean.setSubject("有队员退出了你的队伍！——感谢您使用窝窝屎组队系统");
+            mailConfig.sendHtmlMail(emailBean);
+        }
+    }
+
+    @Async
+    private void sendKickOutTeamEmail(Team team, User kickedUser) throws Exception {
+        if (kickedUser.isEmailValidation()) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>您被【" + team.getTeamName() + "】小队的队长" +
+                            (SysUtils.isEmpty(team.getAddUser().getClan()) ? "" : "[" + team.getAddUser().getClan() + "]") +
+                    team.getAddUser().getGameId() + "移出了该小队，您可以加入其它队伍。" +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setReceiver(kickedUser.getEmail());
+            emailBean.setSubject("您被队长移出了车队！——感谢您使用窝窝屎组队系统");
+            mailConfig.sendHtmlMail(emailBean);
+        }
     }
 }

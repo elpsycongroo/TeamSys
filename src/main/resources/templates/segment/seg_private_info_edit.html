@@ -41,7 +41,8 @@
         <div class="form-group">
             <label for="clan" class="col-sm-2 control-label no-padding-right">军团</label>
             <div class="col-sm-7">
-                <input type="hidden" id="clan" placeholder="不填写军团将无法使用后续军团有关功能" name="clan"/>
+                <input type="hidden" id="clan" th:placeholder="${user.clan} eq null ?
+                '不填写军团将无法使用后续军团相关功能': ${user.clan}" name="clan"/>
             </div>
         </div>
 
@@ -66,7 +67,7 @@
         </div>
     </div>
 </div>
-<script>
+<script th:inline="javascript">
     jQuery(function ($) {
         $("#clan").select2({
             placeholder: "输入舰队标签",
@@ -93,6 +94,10 @@
         }).on("change", function () {
             $("#clan").val($(this).select2("data").tag);
         });
+
+        if ([[${user.clan}]] != null) {
+            $("#clan").val([[${user.clan}]]);
+        }
 
         $('#muserinfoform').bootstrapValidator({
             message: 'This value is not valid',

@@ -197,7 +197,24 @@ public class ApiController {
 
     @PostMapping("/teams/leave")
     public ResponseBean leaveTeam(Long teamId, Long userId) {
-        return teamService.leaveTeam(userId, teamId);
+        try {
+            return teamService.leaveTeam(userId, teamId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @PostMapping("/teams/kick")
+    public ResponseBean kickOutTeam(Long teamId, Long userId) {
+        try {
+            return teamService.kickoutTeam(teamId, userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
     }
 
 }
