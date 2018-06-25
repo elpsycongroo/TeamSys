@@ -217,4 +217,15 @@ public class ApiController {
         }
     }
 
+    @PostMapping("/teams/dis")
+    public ResponseBean disTeam(Long teamId) {
+        try {
+            return teamService.disTeam(teamId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
 }

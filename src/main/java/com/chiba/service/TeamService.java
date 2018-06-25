@@ -196,8 +196,39 @@ public class TeamService {
             responseBean.setMsg("该队伍已经截止或解散");
         } else {
             kickUser.setTeam(null);
+            kickUser.setCreateOperLeft(kickUser.getCreateOperLeft() + 1);
             team.setPosLeft(team.getPosLeft() + 1);
             sendKickOutTeamEmail(team, kickUser);
+        }
+        return responseBean;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean disTeam(Long teamId) throws Exception {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername());
+        Team team = teamRepository.getOne(teamId);
+        ResponseBean responseBean = new ResponseBean();
+        if (!user.getId().equals(team.getAddUser().getId())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("你不是这个队伍的队长，无权解散该队（你到底是谁？）");
+        } else {
+            for (User u : team.getPlayerList()) {
+                //这里是一个异步方法 可能有坑
+                sendDisTeamEmail(team, u);
+                if (u.getId().equals(user.getId())) {
+                    if (team.isDeleteStatus()) {
+                        u.setCreateOperLeft(u.getCreateOperLeft() + 1);
+                    }
+                } else {
+                    u.setCreateOperLeft(u.getCreateOperLeft() + 1);
+                }
+                u.setTeam(null);
+                userRepository.save(u);
+            }
+            team.setDeleteStatus(true);
+            teamRepository.save(team);
+            responseBean.setMsg(String.valueOf(user.getCreateOperLeft()));
         }
         return responseBean;
     }
@@ -235,11 +266,25 @@ public class TeamService {
         if (kickedUser.isEmailValidation()) {
             EmailBean emailBean = new EmailBean();
             emailBean.setContent("<h3>您被【" + team.getTeamName() + "】小队的队长" +
-                            (SysUtils.isEmpty(team.getAddUser().getClan()) ? "" : "[" + team.getAddUser().getClan() + "]") +
+                    (SysUtils.isEmpty(team.getAddUser().getClan()) ? "" : "[" + team.getAddUser().getClan() + "]") +
                     team.getAddUser().getGameId() + "移出了该小队，您可以加入其它队伍。" +
                     "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
             emailBean.setReceiver(kickedUser.getEmail());
             emailBean.setSubject("您被队长移出了车队！——感谢您使用窝窝屎组队系统");
+            mailConfig.sendHtmlMail(emailBean);
+        }
+    }
+
+    @Async
+    private void sendDisTeamEmail(Team team, User user) throws Exception {
+        if (user.isEmailValidation()) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>您加入的【" + team.getTeamName() + "】小队被队长" +
+                    (SysUtils.isEmpty(team.getAddUser().getClan()) ? "" : "[" + team.getAddUser().getClan() + "]") +
+                    team.getAddUser().getGameId() + "解散，您可以加入其它队伍。" +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setSubject("您加入的车队解散了！——感谢您使用窝窝屎组队系统");
+            emailBean.setReceiver(user.getEmail());
             mailConfig.sendHtmlMail(emailBean);
         }
     }
