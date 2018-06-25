@@ -67,10 +67,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().ignoringAntMatchers("/login", "/register", "/kaptcha-image/**", "/api/register");
+        http.csrf().ignoringAntMatchers("/login", "/register", "/kaptcha-image/**", "/api/register", "/api/users/pwd_forget");
         http.authorizeRequests()
                 .antMatchers(
-                        "/kaptcha-image/**", "/register", "/api/**", "/users/email/verify_address**").permitAll()
+                        "/kaptcha-image/**", "/register", "/api/**", "/users/email/verify_address**", "/iforgot").permitAll()
                 .anyRequest().authenticated()
                 .and().logout().logoutUrl("/logout").permitAll().logoutSuccessUrl("/login")//定义logout不需要验证
                 .and().addFilterBefore(new LoginAuthenticationFilter("/login", "/login?error", customUserService(), resourceService()), UsernamePasswordAuthenticationFilter.class)

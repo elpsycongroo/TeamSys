@@ -58,8 +58,12 @@ public class UserController {
     }
 
     @GetMapping("/email/verify_address")
-    public String verifyAddress(String username, String link, ModelMap map) {
-        map.put("data", userService.verifyEmailKey(username, link));
+    public String verifyAddress(String username, String link, String forget, ModelMap map) {
+        if (null != forget) {
+            map.put("data",userService.verifyForgetKey(username, link));
+        } else {
+            map.put("data", userService.verifyEmailKey(username, link));
+        }
         return "segment/seg_verify_address";
     }
 }

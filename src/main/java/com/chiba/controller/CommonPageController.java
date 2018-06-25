@@ -41,6 +41,11 @@ public class CommonPageController {
         return "register";
     }
 
+    @GetMapping("/iforgot")
+    public String forgetPage() {
+        return "iforgot";
+    }
+
     @GetMapping("/dashboard")
     public String dashBoardPage() {
         return "dashboard";

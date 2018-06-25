@@ -142,6 +142,9 @@ public class CustomUserService implements UserDetailsService {
         } else {
             originUser.setTrueName(user.getTrueName());
             originUser.setClan(user.getClan());
+            if (!originUser.getEmail().equals(user.getEmail())) {
+                originUser.setEmailValidation(false);
+            }
             originUser.setEmail(user.getEmail());
             originUser.setGameId(user.getGameId());
             userRepository.save(originUser);
@@ -182,18 +185,73 @@ public class CustomUserService implements UserDetailsService {
 
     private User sendValidEmail(User user) throws Exception {
         Date nowDate = new Date();
-        String link = MD5Util.encode(UUID.randomUUID().toString());
+        String link = MD5Util.encode(UUID.randomUUID().toString() + user.getUsername());
         EmailBean emailBean = new EmailBean();
         emailBean.setContent("<h3>您的激活邮箱链接为<br><a herf='" + Constant.HOST + "/users/email/verify_address?username="
                 + user.getUsername() + "&link=" + link + "'>" + Constant.HOST + "/users/email/verify_address?username="
-                + user.getUsername() + "&link=" + link + "</a><br>该链接30分钟内有效，激活后您可获得组队通知推送，请勿公开！</h3>" +
-                "<br>(如不能直接打开链接，请复制到浏览器后打开)<br>窝窝屎组队系统");
+                + user.getUsername() + "&link=" + link + "</a><br>该链接30分钟内有效，激活后您可获得组队通知推送和找回密码功能，请勿公开！</h3>" +
+                "<br>(如不能直接打开链接，请复制到浏览器后打开;该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
         emailBean.setReceiver(user.getEmail());
         emailBean.setSubject("邮箱激活邮件——感谢您注册窝窝屎组队系统");
         mailConfig.sendHtmlMail(emailBean);
         user.setEmailValidation(false);
         user.setEmailValidationKey(link);
         user.setKeyGenTime(nowDate);
+        return user;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean sendForgetEmail(String emailAddress) throws Exception {
+        User user = userRepository.findByEmail(emailAddress);
+        ResponseBean responseBean = new ResponseBean();
+        if (null == user) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("该邮箱对应的用户不存在");
+        } else if (user.isDeleteStatus()) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("该邮箱对应的用户已停用，请联系管理员");
+        } else if (!user.isEmailValidation()) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("该邮箱尚未验证，请联系管理员");
+        } else {
+            Calendar forgetKeyGenTime = Calendar.getInstance();
+            boolean fkValid = false;
+            if (null != user.getForgetKeyGenTime()) {
+                Date now = new Date();
+                forgetKeyGenTime.setTime(user.getForgetKeyGenTime());
+                forgetKeyGenTime.add(Calendar.MINUTE, 5);
+                if (now.before(forgetKeyGenTime.getTime())) {
+                    responseBean.setStatus(Constant.FAILED);
+                    responseBean.setMsg("验证邮件最小发送间隔为5分钟，请等待");
+                } else {
+                    fkValid = true;
+                }
+            } else {
+                fkValid = true;
+            }
+            if (fkValid) {
+                //发送邮件
+                user = sendForgetEmail(user);
+                userRepository.save(user);
+            }
+        }
+        return responseBean;
+    }
+
+    private User sendForgetEmail(User user) throws Exception {
+        Date nowDate = new Date();
+        String link = MD5Util.encode(UUID.randomUUID().toString() + user.getUsername() + "forget");
+        EmailBean emailBean = new EmailBean();
+        emailBean.setContent("<h3>您的密码找回邮箱链接为<br><a herf='" + Constant.HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "&forget=true'>" + Constant.HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "&forget=true</a><br>该链接30分钟内有效，确认后您的密码将会被重置，请勿公开！</h3>" +
+                "<br>(如不能直接打开链接，请复制到浏览器后打开;该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+        emailBean.setReceiver(user.getEmail());
+        emailBean.setSubject("密码找回邮件——感谢您使用窝窝屎组队系统");
+        mailConfig.sendHtmlMail(emailBean);
+        user.setForgetKey(link);
+        user.setForgetKeyGenTime(nowDate);
+        user.setForgetKeyValid(false);
         return user;
     }
 
@@ -208,6 +266,27 @@ public class CustomUserService implements UserDetailsService {
                 user.setEmailValidation(true);
                 userRepository.save(user);
                 return new ResponseBean();
+            } else {
+                return new ResponseBean(Constant.FAILED, "该链接已经过期，请重新发送验证链接");
+            }
+        }
+        return new ResponseBean(Constant.FAILED, "该链接已被使用或该用户不存在，请核实");
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean verifyForgetKey(String username, String key) {
+        User user = userRepository.findByUsernameAndForgetKey(username, key);
+        if (null != user && !user.isForgetKeyValid()) {
+            Calendar lastValidTime = Calendar.getInstance();
+            lastValidTime.setTime(user.getForgetKeyGenTime());
+            lastValidTime.add(Calendar.MINUTE, 30);
+            if (new Date().before(lastValidTime.getTime())) {
+                user.setForgetKeyValid(true);
+                //重置密码流程
+                String newPwd = SysUtils.generateShortUuid();
+                user.setPassword(MD5Util.encode(newPwd));
+                userRepository.save(user);
+                return new ResponseBean(Constant.OK, newPwd);
             } else {
                 return new ResponseBean(Constant.FAILED, "该链接已经过期，请重新发送验证链接");
             }

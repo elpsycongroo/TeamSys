@@ -18,6 +18,8 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLDecoder;
+import java.util.Calendar;
+import java.util.Date;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -68,6 +70,14 @@ public class ApiController {
         return new ValidatorBean(true);
     }
 
+    @GetMapping("check_email_forget")
+    public ValidatorBean checkEmailForget(String email) {
+        if (null != userService.getUserByEmail(email)) {
+            return new ValidatorBean(true);
+        }
+        return new ValidatorBean(false);
+    }
+
     @PostMapping("register")
     public ResponseBean register(User user) {
         user.setPassword(MD5Util.encode(user.getPassword()));
@@ -76,6 +86,10 @@ public class ApiController {
         user.setCreateOperLeft(3);
         user.setEmailValidation(false);
         user.setForgetKeyValid(false);
+        Calendar now = Calendar.getInstance();
+        now.setTime(new Date());
+        now.add(Calendar.MINUTE, -5);
+        user.setKeyGenTime(now.getTime());
         userService.saveUser(user);
         return new ResponseBean();
     }
@@ -121,6 +135,17 @@ public class ApiController {
     public ResponseBean sendValidateEmailAddress() {
         try {
             return userService.sendEmailAddressValidateEmail();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @PostMapping("/users/pwd_forget")
+    public ResponseBean sendValidatePwdForget(String email) {
+        try {
+            return userService.sendForgetEmail(email);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

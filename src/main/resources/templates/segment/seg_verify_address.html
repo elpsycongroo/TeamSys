@@ -13,7 +13,11 @@
 <script>
     jQuery(function ($) {
        if ($("#status").val() === "ok") {
-           alert("邮箱验证成功，如状态未更新，请注销后重新登录");
+           if ($("#msg").val() === "success") {
+               alert("邮箱验证成功，如状态未更新，请注销后重新登录");
+           } else {
+               alert("找回密码成功，您的密码已被重置为" + $("#msg").val() + "请登录后马上修改！");
+           }
        } else {
            alert($("#msg").val());
        }

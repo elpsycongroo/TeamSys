@@ -54,6 +54,11 @@ public class LoginAuthenticationFilter extends AbstractAuthenticationProcessingF
             }
             String username = req.getParameter("username");
             User user = userService.findUserByUsername(username);
+            if (user.isDeleteStatus()) {
+                req.getSession().setAttribute("login_error_message", "用户已停用，请联系管理员");
+                unsuccessfulAuthentication(req, res, new InsufficientAuthenticationException("用户已停用"));
+                return;
+            }
             req.getSession().removeAttribute("login_error_message");
             req.getSession().setAttribute("currentUser", user);
             List<Resource> resourceList = resourceService.getResourceByUserId(user.getId());
