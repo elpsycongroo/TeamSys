@@ -141,6 +141,7 @@ public class TeamService {
     private synchronized void joinTeamSync(User user, Team team) {
         user.setTeam(team);
         team.setPosLeft(team.getPosLeft() - 1);
+        if (user.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT)
         user.setCreateOperLeft(user.getCreateOperLeft() - 1);
         userRepository.save(user);
         teamRepository.save(team);
@@ -196,6 +197,7 @@ public class TeamService {
             responseBean.setMsg("该队伍已经截止或解散");
         } else {
             kickUser.setTeam(null);
+            if (kickUser.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT)
             kickUser.setCreateOperLeft(kickUser.getCreateOperLeft() + 1);
             team.setPosLeft(team.getPosLeft() + 1);
             sendKickOutTeamEmail(team, kickUser);
@@ -217,10 +219,10 @@ public class TeamService {
                 //这里是一个异步方法 可能有坑
                 sendDisTeamEmail(team, u);
                 if (u.getId().equals(user.getId())) {
-                    if (team.isDeleteStatus()) {
+                    if (team.isDeleteStatus() && u.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT) {
                         u.setCreateOperLeft(u.getCreateOperLeft() + 1);
                     }
-                } else {
+                } else if (u.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT){
                     u.setCreateOperLeft(u.getCreateOperLeft() + 1);
                 }
                 u.setTeam(null);
