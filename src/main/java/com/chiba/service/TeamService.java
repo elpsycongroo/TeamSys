@@ -141,8 +141,10 @@ public class TeamService {
     private synchronized void joinTeamSync(User user, Team team) {
         user.setTeam(team);
         team.setPosLeft(team.getPosLeft() - 1);
-        if (user.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT)
-        user.setCreateOperLeft(user.getCreateOperLeft() - 1);
+        if (user.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT) {
+            user.setCreateOperLeft(user.getCreateOperLeft() - 1);
+        }
+        team.setUpdateTime(new Date());
         userRepository.save(user);
         teamRepository.save(team);
     }
@@ -170,11 +172,12 @@ public class TeamService {
 
     private synchronized void leaveTeamSync(User user, Team team) {
         Date now = new Date();
-        if (team.isDeleteStatus() || now.after(team.getLimitTime())) {
+        if ((team.isDeleteStatus() || now.after(team.getLimitTime())) && user.getCreateOperLeft() < 3) {
             user.setCreateOperLeft(user.getCreateOperLeft() + 1);
         }
         user.setTeam(null);
         team.setPosLeft(team.getPosLeft() + 1);
+        team.setUpdateTime(now);
         userRepository.save(user);
         teamRepository.save(team);
     }
@@ -197,10 +200,14 @@ public class TeamService {
             responseBean.setMsg("该队伍已经截止或解散");
         } else {
             kickUser.setTeam(null);
-            if (kickUser.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT)
-            kickUser.setCreateOperLeft(kickUser.getCreateOperLeft() + 1);
+            if (kickUser.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT) {
+                kickUser.setCreateOperLeft(kickUser.getCreateOperLeft() + 1);
+            }
             team.setPosLeft(team.getPosLeft() + 1);
+            team.setUpdateTime(new Date());
             sendKickOutTeamEmail(team, kickUser);
+            userRepository.save(kickUser);
+            teamRepository.save(team);
         }
         return responseBean;
     }
@@ -222,13 +229,14 @@ public class TeamService {
                     if (team.isDeleteStatus() && u.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT) {
                         u.setCreateOperLeft(u.getCreateOperLeft() + 1);
                     }
-                } else if (u.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT){
+                } else if (u.getCreateOperLeft() < Constant.CREATE_TEAM_LIMIT) {
                     u.setCreateOperLeft(u.getCreateOperLeft() + 1);
                 }
                 u.setTeam(null);
                 userRepository.save(u);
             }
             team.setDeleteStatus(true);
+            team.setUpdateTime(new Date());
             teamRepository.save(team);
             responseBean.setMsg(String.valueOf(user.getCreateOperLeft()));
         }
@@ -289,5 +297,47 @@ public class TeamService {
             emailBean.setReceiver(user.getEmail());
             mailConfig.sendHtmlMail(emailBean);
         }
+    }
+
+    public String checkCreateTeam() {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername());
+        String msg = null;
+        if (null != user.getTeam()) {
+            msg = "您已加入队伍，不能再创建队伍";
+        } else if (user.getCreateOperLeft() < 1) {
+            msg = "您本日剩余可创建或加入队伍次数已用完，请明日再试";
+        } else if (SysUtils.isEmpty(user.getGameId())) {
+            msg = "您未设置游戏ID，不能创建队伍";
+        }
+        return msg;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean createTeam(Team team) {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername());
+        ResponseBean responseBean = new ResponseBean();
+        if (null != user.getTeam()) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("您已加入队伍，不能再创建队伍");
+        } else if (user.getCreateOperLeft() < 1) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("您本日剩余可创建或加入队伍次数已用完，请明日再试");
+        } else if (SysUtils.isEmpty(user.getGameId())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("您未设置游戏ID，不能创建队伍");
+        } else if (team.getLimitTime().before(new Date())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("截止日期不能早于当前日期");
+        } else {
+            team.setAddUser(user);
+            team.setAddTime(new Date());
+            teamRepository.save(team);
+            user.setCreateOperLeft(user.getCreateOperLeft() - 1);
+            user.setTeam(teamRepository.findByCode(team.getCode()));
+            userRepository.save(user);
+        }
+        return responseBean;
     }
 }

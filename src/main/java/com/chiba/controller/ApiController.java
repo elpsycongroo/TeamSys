@@ -13,11 +13,15 @@ import com.chiba.utils.MD5Util;
 import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.parameters.P;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -39,6 +43,13 @@ public class ApiController {
 
     @Autowired
     private TeamService teamService;
+
+    @InitBinder
+    protected void init(HttpServletRequest request, ServletRequestDataBinder binder) throws Exception {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        dateFormat.setLenient(false);
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
+    }
 
     @GetMapping("check_username")
     public ValidatorBean checkName(String username) {
@@ -181,6 +192,17 @@ public class ApiController {
             e.printStackTrace();
             log.error(e.getMessage());
             return "error";
+        }
+    }
+
+    @PostMapping("/teams")
+    public ResponseBean createTeam(Team team) {
+        try {
+            return teamService.createTeam(team);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
         }
     }
 

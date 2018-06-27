@@ -2,7 +2,7 @@
 <html lang="en">
 <head th:include="common_css::head(title='组队看板')"/>
 <body>
-
+<link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/bootstrap-datetimepicker.min.css')}" rel="stylesheet"/>
 <!-- Navbar -->
 <div th:include="common_header :: header" class="navbar">
 
@@ -47,7 +47,7 @@
                                             class="fa fa-search"></i>搜索
                                     </button>
                                     <a href="#" class="btn btn-success  bootbox-add-options" style="float: right;"
-                                       onclick="showbrandinfo();"><i
+                                       onclick="createTeam();"><i
                                             class="fa fa-plus"></i>创建队伍</a>
 
                                 </div>
@@ -84,6 +84,7 @@
 </div>
 </div>
 <footer th:replace="common_js"/>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/datetime/bootstrap-datetimepicker.js')}"></script>
 <script>
     var deleteStatusList = [{id: 0, text: "招募中"}, {id: 1, text: "已截止"}];
     var sourceList = [{id: 0, text: "效率"}, {id: 1, text: "娱乐"}, {id: 2, text: "爬线"}, {id: 3, text: "涂油"}];
@@ -239,6 +240,13 @@
                 jQuery("#commonModal").modal("show");
             }
         });
+    }
+
+    function createTeam() {
+        commonAjax(null, "/teams/segment_team_create", "GET", {}, function (data) {
+            jQuery("#commonModal").modal("show");
+            jQuery("#segment_modal").html(data);
+        })
     }
 </script>
 
