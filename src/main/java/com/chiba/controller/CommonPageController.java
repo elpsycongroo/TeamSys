@@ -97,4 +97,9 @@ public class CommonPageController {
     public String getErrorPage(@PathVariable String page) {
         return "error-" + page;
     }
+
+    @GetMapping("/user-manage")
+    public String getUserManagePage() {
+        return "user_manage";
+    }
 }

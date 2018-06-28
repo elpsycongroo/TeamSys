@@ -22,6 +22,11 @@ public class Constant {
     public static final String SIDX_UPDATE_TIME = "updateTime";
 
     public static final int JSON_USER_TYPE_SELECT_NAME = 1;
+    public static final int JSON_USER_TYPE_SELECT_LIST = 2;
+    public static final int JSON_USER_TYPE_SELECT_CLAN_NAME = 3;
+
+    public static final int JSON_ROLE_TYPE_SELECT_NAME = 1;
+    public static final int JSON_ROLE_TYPE_SELECT_LIST = 2;
 
     public static final int CREATE_TEAM_LIMIT = 3;
 }

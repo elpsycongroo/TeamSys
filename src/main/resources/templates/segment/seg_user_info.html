@@ -1,0 +1,123 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title">修改用户信息</h4>
+</div>
+<div class="modal-body" id="musermodal_content">
+    <form class="form-horizontal" id="muserinfoform" role="form">
+        <div class="form-title">展示信息</div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label no-padding-right">用户名
+            </label>
+            <div class="col-sm-7">
+                <input type="hidden" name="username" th:value="${user.username}" />
+                <div class="form-control" th:text="${user.username}"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="trueName" class="col-sm-2 control-label no-padding-right">昵称
+            </label>
+            <div class="col-sm-7">
+                <div class="form-control" th:text="${user.trueName}" id="trueName"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email" class="col-sm-2 control-label no-padding-right">Email</label>
+            <div class="col-sm-7">
+                <div class="form-control" th:text="${user.email}" id="email"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="clan" class="col-sm-2 control-label no-padding-right">军团</label>
+            <div class="col-sm-7">
+                <div class="form-control" th:text="${user.clan}" id="clan"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="gameId" class="col-sm-2 control-label no-padding-right">游戏ID<span
+                    style="color: brown">&nbsp;*</span></label>
+            <div class="col-sm-7">
+                <div class="form-control" th:text="${user.gameId}" id="gameId"></div>
+            </div>
+        </div>
+        <div class="form-title">可修改信息</div>
+        <div class="form-group">
+            <label for="role2" class="col-sm-2 control-label no-padding-right">角色<span
+                    style="color: brown">&nbsp;*</span></label>
+            <div class="col-sm-7">
+                <input type="hidden" name="role.id" th:value="${user.role.id}" id="role2"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="createOperLeft" class="col-sm-2 control-label no-padding-right">剩余次数<span
+                    style="color: brown">&nbsp;*</span></label>
+            <div class="col-sm-7">
+                <select name="createOperLeft" id="createOperLeft">
+                    <option value="0" >0</option>
+                    <option value="1" >1</option>
+                    <option value="2" >2</option>
+                    <option value="3" >3</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info" id="regBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    jQuery(function ($) {
+        $("#createOperLeft").val([[${user.createOperLeft}]]);
+
+        $("#role2").select2({
+            width: $(this).parent().width(),
+            minimumInputLength: 0,
+            multiple: false,
+            allowClear: false,
+            ajax: {
+                url: "/api/roles/name",
+                dataType: "json",
+                data: function (data, page) {
+                    return {
+                        rows: 10,
+                        page: page,
+                        name: encodeURI(data)
+                    };
+                },
+                results: function (data, pageNo) {
+                    var more = (pageNo * 10) < data.records;
+                    if (data.rows.length > 0) {
+                        return {results: data.rows, more: more}
+                    } else {
+                        return {results: data, more: more}
+                    }
+                }
+            },
+            formatSelection: formatSelection,
+            formatResult: formatResult
+        }).select2("data", {"id":[[${user.role.id}]], "text":[[${user.role.name}]]});
+
+        $("#regBtn").click(function () {
+            var data = $("#muserinfoform").serialize();
+            commonAjax(null, "/api/users", "PUT", data, function (resp) {
+                if (resp.status === "ok") {
+                    $("#commonModal").modal("hide");
+                    Notify('修改成功', 'top-right', '5000', 'success', 'fa-check', true);
+                    jQuery("#searchable").trigger("reloadGrid");
+                } else {
+                    Notify(resp.msg, 'top-right', '5000', 'danger', 'fa-times', true);
+                }
+            })
+        })
+    })
+</script>

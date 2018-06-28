@@ -40,19 +40,18 @@
                                     <div class="form-group">
                                         <input type="hidden" id="role" name="role" placeholder="角色">
                                     </div>
-                                    <div class="form-group">
-                                        <input type="hidden" id="deleteStatus" name="deleteStatus" placeholder="状态">
-                                    </div>
-                                    <button class="btn btn-info" type="button" onclick="searchJqGrid()"><i
-                                            class="fa fa-search"></i>搜索
-                                    </button>
-
                                 </div>
                                 <br/>
                                 <div class="form-inline">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="teamName" name="teamName" placeholder="队伍名称">
+                                        <input type="hidden" id="deleteStatus" name="deleteStatus" placeholder="状态">
                                     </div>
+                                    <div class="form-group">
+                                        <input type="hidden" id="clan" name="clan" placeholder="军团">
+                                    </div>
+                                    <button class="btn btn-info" type="button" onclick="searchJqGrid()"><i
+                                            class="fa fa-search"></i>搜索
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -73,34 +72,48 @@
     </div>
     <!-- /Page Container -->
     <!-- Main Container -->
-    <input type="hidden" id="gameId" th:value="${session.currentUser.gameId}"/>
-    <th:block sec:authorize="hasAuthority('SYSTEM_MANAGE;ALL')">
-        <input type="hidden" id="isAdmin" value="1"/>
-    </th:block>
 
 </div>
 </div>
 <footer th:replace="common_js"/>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/backsystem_commonleft.js')}" id="navigation" charset="utf-8" data="user-manage"></script>
 <script>
-    var deleteStatusList = [{id: 0, text: "招募中"}, {id: 1, text: "已截止"}];
-    var sourceList = [{id: 0, text: "效率"}, {id: 1, text: "娱乐"}, {id: 2, text: "爬线"}, {id: 3, text: "涂油"}];
+    var deleteStatusList = [{id: 0, text: "已启用"}, {id: 1, text: "已停用"}];
     var grid_selector = "#searchable";
     var pager_selector = "#grid-pager";
     var gameId = jQuery("#gameId").val();
 
     jQuery(function ($) {
-        $("#mtype").select2({
-            width: 250,
+        $("#role").select2({
+            width: 100,
             minimumInputLength: 0,
             multiple: false,
             allowClear: true,
-            data: sourceList,
+            ajax: {
+                url: "/api/roles/name",
+                dataType: "json",
+                data: function (data, page) {
+                    return {
+                        rows: 10,
+                        page: page,
+                        name: encodeURI(data)
+                    };
+                },
+                results: function (data, pageNo) {
+                    var more = (pageNo * 10) < data.records;
+                    if (data.rows.length > 0) {
+                        return {results: data.rows, more: more}
+                    } else {
+                        return {results: data, more: more}
+                    }
+                }
+            },
             formatSelection: formatSelection,
             formatResult: formatResult
         });
 
-        $("#mdeleteStatus").select2({
-            width: 250,
+        $("#deleteStatus").select2({
+            width: 100,
             minimumInputLength: 0,
             multiple: false,
             allowClear: true,
@@ -109,8 +122,36 @@
             formatResult: formatResult
         });
 
-        $("#mleader").select2({
-            width: 250,
+        $("#clan").select2({
+            width: 200,
+            minimumInputLength: 0,
+            multiple: false,
+            allowClear: true,
+            ajax: {
+                url: "/api/users/clan",
+                dataType: "json",
+                data: function (data, page) {
+                    return {
+                        rows: 10,
+                        page: page,
+                        clan: encodeURI(data)
+                    };
+                },
+                results: function (data, pageNo) {
+                    var more = (pageNo * 10) < data.records;
+                    if (data.rows.length > 0) {
+                        return {results: data.rows, more: more}
+                    } else {
+                        return {results: data, more: more}
+                    }
+                }
+            },
+            formatSelection: formatSelection,
+            formatResult: formatResult
+        });
+
+        $("#username").select2({
+            width: 200,
             minimumInputLength: 0,
             multiple: false,
             allowClear: true,
@@ -138,7 +179,7 @@
         });
 
         jQuery(grid_selector).jqGrid({
-            url: "/api/teams",
+            url: "/api/users",
             mtype: "GET",
             datatype: "json",
             postData: {},
@@ -150,18 +191,17 @@
             height: "100%",
             sortname: "addTime",
             sortorder: "desc",
-            colNames: ['ID', '车队名称', '编码', '队长', '类型', '创建时间', '开车时间', '更新时间', '剩余位置', '状态', '操作'],
+            colNames: ['ID', '用户名', '游戏ID', '角色', "军团", '创建时间', '更新时间', '剩余次数', '状态', '操作'],
             colModel: [
                 {name: 'id', index: 'id', sortable: false, editable: false, search: false, hidden: true},
-                {name: 'teamName', index: 'teamName', width: 100, editable: false, search: false, sortable: false},
-                {name: 'code', index: 'code', width: 100, editable: false, search: false, sortable: false},
-                {name: 'addUser', index: 'addUser', width: 150, editable: false, search: false, sortable: true},
-                {name: 'type', index: 'type', width: 100, editable: false, search: false, sortable: true},
+                {name: 'username', index: 'username', width: 200, editable: false, search: false, sortable: false},
+                {name: 'gameId', index: 'gameId', width: 200, editable: false, search: false, sortable: false},
+                {name: 'role', index: 'role', width: 150, editable: false, search: false, sortable: true},
+                {name: 'clan', index: 'clan', width: 150, editable: false, search: false, sortable: true},
                 {name: 'addTime', index: 'addTime', width: 200, editable: false, search: false, sortable: true},
-                {name: 'limitTime', index: 'limitTime', width: 200, editable: false, search: false, sortable: true},
                 {name: 'updateTime', index: 'updateTime', width: 200, editable: false, search: false, sortable: true},
-                {name: 'posLeft', index: 'posLeft', width: 100, editable: false, search: false, sortable: true},
-                {name: 'deleteStatus', index: 'deleteStatus', width: 150, editable: false, search: false, sortable: true},
+                {name: 'createOperLeft', index: 'createOperLeft', width: 100, editable: false, search: false, sortable: true},
+                {name: 'deleteStatus', index: 'deleteStatus', width: 100, editable: false, search: false, sortable: true},
                 {name: 'action', index: 'action', width: 200, editable: false, search: false, sortable: false}
             ],
             rowNum: 10,
@@ -173,22 +213,16 @@
             gridComplete: function () {
                 var ids = jQuery(grid_selector).jqGrid("getDataIDs");
                 for (var i = 0; i < ids.length; i++) {
-                    var addUser = jQuery(grid_selector).getCell(ids[i], "addUser");
                     var isDelete = jQuery(grid_selector).getCell(ids[i], "deleteStatus");
                     var id = jQuery(grid_selector).getCell(ids[i], "id");
-                    var teamType = jQuery(grid_selector).getCell(ids[i], "type");
-                    jQuery(grid_selector).jqGrid('setRowData', ids[i], {type: sourceList[teamType].text});
-                    var modify = "<div onclick='showTeamInfo(" + ids[i] + ")' class='btn btn-xs btn-info' style='margin-right:12px'><i class='fa fa-edit'></i>查看</div>";
-                    if (isDelete === "已截止") {
+                    var modify = "<div onclick='showUserInfo(" + ids[i] + ")' class='btn btn-xs btn-warning' style='margin-right:12px'><i class='fa fa-edit'></i>编辑</div>"
+                    if (isDelete === "已启用") {
+                        modify += "<div onclick='updateDeleteStatus(" + ids[i] + ", true)' class='btn btn-xs btn-danger' style='margin-right:12px'><i class='fa fa-lock'></i>停用</div>";
+                    }
+                    if (isDelete === "已停用") {
                         jQuery(grid_selector).find("tr[id=" + id + "]").css("color", "#dbdbdb");
                         jQuery(grid_selector).jqGrid('setRowData', ids[i], {action: modify});
-                        continue;
-                    }
-                    if (addUser === gameId) {
-                        jQuery(grid_selector).find("tr[id=" + id + "]").css("color", "#ff8f32");
-                    }
-                    if (addUser === gameId || jQuery("#isAdmin").val() === "1") {
-                        modify += "<div onclick='deleteTeam(" + ids[i] + ")' class='btn btn-xs btn-danger' style='margin-right:12px'><i class='fa fa-trash-o'></i>删除</div>"
+                        modify += "<div onclick='updateDeleteStatus(" + ids[i] + ", false)' class='btn btn-xs btn-success' style='margin-right:12px'><i class='fa fa-unlock'></i>启用</div>";
                     }
                     jQuery(grid_selector).jqGrid('setRowData', ids[i], {action: modify});
                 }
@@ -209,31 +243,42 @@
     });
 
     function searchJqGrid() {
-        var teamName = jQuery("#teamName").val();
-        var leader = jQuery("#mleader").val();
-        var deleteStatus = jQuery("#mdeleteStatus").val();
-        var type = jQuery("#mtype").val();
+        var clan = jQuery("#clan").val();
+        var username = jQuery("#username").val();
+        var deleteStatus = jQuery("#deleteStatus").val();
+        var role = jQuery("#role").val();
         jQuery(grid_selector).jqGrid('setGridParam', {
             datatype: 'json',
             postData: {
-                'teamName': encodeURI(teamName),
-                'leader': leader,
+                'clan': encodeURI(clan),
+                'username': username,
                 'deleteStatus': deleteStatus,
-                'type': type
+                'role': role
             }, //发送数据
             page: 1
         }).trigger("reloadGrid"); //重新载入
     }
 
-    function showTeamInfo(id) {
+    function showUserInfo(id) {
         jQuery.ajax({
             type: "GET",
-            url: "teams/segment_team_info",
-            data: {teamId: id},
+            url: "users/segment_user_info",
+            data: {userId: id},
             dataType: "html",
             success: function (data) {
                 jQuery("#segment_modal").html(data);
                 jQuery("#commonModal").modal("show");
+            }
+        });
+    }
+
+    function updateDeleteStatus(id, status) {
+        commonAjax(null, "/api/users/deleteStatus", "POST", {userId:id, status:status}, function (data) {
+            if (data.status === "ok") {
+                Notify('操作成功', 'top-right', '5000', 'success', 'fa-check', true);
+                jQuery(grid_selector).trigger("reloadGrid");
+            } else {
+                Notify('操作失败', 'top-right', '5000', 'danger', 'fa-times', true);
             }
         });
     }

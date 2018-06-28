@@ -4,6 +4,7 @@ import com.chiba.bean.Constant;
 import com.chiba.bean.ResponseBean;
 import com.chiba.bean.SelectBean;
 import com.chiba.bean.ValidatorBean;
+import com.chiba.domain.Role;
 import com.chiba.domain.Team;
 import com.chiba.domain.User;
 import com.chiba.service.CustomUserService;
@@ -15,7 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.parameters.P;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,8 +77,12 @@ public class ApiController {
 
     @GetMapping("check_email_reg")
     public ValidatorBean checkEmailReg(String email) {
-        if (null != userService.getUserByEmail(email)) {
-            return new ValidatorBean(false);
+        User user = userService.getUserByEmail(email);
+        if (null != user) {
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (!user.getUsername().equals(userDetails.getUsername())) {
+                return new ValidatorBean(false);
+            }
         }
         return new ValidatorBean(true);
     }
@@ -99,6 +105,7 @@ public class ApiController {
         user.setForgetKeyValid(false);
         Calendar now = Calendar.getInstance();
         now.setTime(new Date());
+        user.setAddTime(now.getTime());
         now.add(Calendar.MINUTE, -5);
         user.setKeyGenTime(now.getTime());
         userService.saveUser(user);
@@ -107,11 +114,11 @@ public class ApiController {
 
     //========================================USER========================================
     @GetMapping("/users/name")
-    public String getUserList (String username, Integer rows, Integer page, String sidx, String sord) {
+    public String getUserList(String username, Integer rows, Integer page, String sidx, String sord) {
         try {
             SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
             selectBean.getParam().put("username", URLDecoder.decode(username, "UTF-8"));
-            Page<User> userPage = userService.getUserList(selectBean);
+            Page<User> userPage = userService.getUserList(selectBean, Constant.JSON_USER_TYPE_SELECT_NAME);
             return userService.getJsonResult(userPage, Constant.JSON_USER_TYPE_SELECT_NAME);
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +128,7 @@ public class ApiController {
     }
 
     @PutMapping("/users/pwd")
-    public ResponseBean changePwd (User user) {
+    public ResponseBean changePwd(User user) {
         try {
             return userService.changePwd(user);
         } catch (Exception e) {
@@ -164,9 +171,67 @@ public class ApiController {
         }
     }
 
+    @GetMapping("/users")
+    public String getUserList(Long username, String clan, Long role, Integer deleteStatus, Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            if (null != username) {
+                selectBean.getParam().put("username", username);
+            }
+            if (!SysUtils.isEmpty(clan)) {
+                selectBean.getParam().put("clan", clan);
+            }
+            if (null != role) {
+                selectBean.getParam().put("role", role);
+            }
+            if (null != deleteStatus) {
+                selectBean.getParam().put("deleteStatus", deleteStatus);
+            }
+            Page<User> userPage = userService.getUserList(selectBean, Constant.JSON_USER_TYPE_SELECT_LIST);
+            return userService.getJsonResult(userPage, Constant.JSON_USER_TYPE_SELECT_LIST);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
+    }
+
     @PutMapping("/users")
-    public ResponseBean editUser() {
-        return new ResponseBean();
+    public ResponseBean editUser(User user) {
+        try {
+            return userService.manageUserInfo(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @PostMapping("/users/deleteStatus")
+    public ResponseBean forbidUsers(Long userId, boolean status) {
+        try {
+            return userService.forbidUser(userId, status);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @GetMapping("/users/clan")
+    public String getClanList(String clan, Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            if (!SysUtils.isEmpty(clan)) {
+                selectBean.getParam().put("clan", URLDecoder.decode(clan, "UTF-8"));
+            }
+            Page<String> clanPage = userService.getUserClanList(selectBean);
+            return userService.getJsonStringResult(clanPage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
     }
 
     //========================================TEAM========================================
@@ -250,4 +315,20 @@ public class ApiController {
         }
     }
 
+    //========================================ROLE========================================
+    @GetMapping("/roles/name")
+    public String getRolesNameList(String name, Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            if (!SysUtils.isEmpty(name)) {
+                selectBean.getParam().put("name", URLDecoder.decode(name, "UTF-8"));
+            }
+            Page<Role> rolePage = roleService.getRoleList(selectBean, Constant.JSON_ROLE_TYPE_SELECT_NAME);
+            return roleService.getJsonResult(rolePage, Constant.JSON_ROLE_TYPE_SELECT_NAME);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
+    }
 }

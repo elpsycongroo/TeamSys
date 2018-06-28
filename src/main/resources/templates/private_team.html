@@ -103,7 +103,7 @@
                                             <div class="form-control">[[${p.gameId}]]</div>
                                             <div class="btn btn-xs btn-danger" th:onclick="|kickoff(${p.id})|"
                                                  th:if="(${session.currentUser.id} eq ${team.addUser.id})
-                                                 and (${p.id} ne ${team.addUser.id})">
+                                                 and (${p.id} ne ${team.addUser.id}) and !${team.deleteStatus}">
                                                 踢出
                                             </div>
                                         </div>
@@ -144,6 +144,7 @@
 </div>
 </div>
 <footer th:replace="common_js"/>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/backsystem_commonleft.js')}" id="navigation" charset="utf-8" data="private-team"></script>
 <script th:inline="javascript" th:if="${team} ne null">
     jQuery(function ($) {
         if ($("#teamType").val() === "0") {

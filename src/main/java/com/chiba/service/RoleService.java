@@ -1,10 +1,25 @@
 package com.chiba.service;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.chiba.bean.Constant;
+import com.chiba.bean.SelectBean;
 import com.chiba.dao.RoleRepository;
 import com.chiba.domain.Role;
+import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
@@ -24,6 +39,44 @@ public class RoleService {
 
     public Role findByCode(String code) {
         return roleRepository.findByCode(code);
+    }
+
+    public String getJsonResult(Page<Role> page, int type) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("total", page.getTotalPages());
+        jsonObject.put("page", page.getNumber());
+        jsonObject.put("records", page.getTotalElements());
+        JSONArray jsonArray = new JSONArray();
+        if (type == Constant.JSON_ROLE_TYPE_SELECT_NAME) {
+            for (Role r : page.getContent()) {
+                JSONObject json = new JSONObject();
+                json.put("id", r.getId());
+                json.put("text", r.getName());
+                jsonArray.add(json);
+            }
+        }
+        jsonObject.put("rows", jsonArray);
+        return jsonObject.toJSONString();
+    }
+
+    public Page<Role> getRoleList(final SelectBean selectBean, int type) {
+        String sord = selectBean.getSord();
+        String sidx = selectBean.getSidx();
+        Integer page = selectBean.getPage();
+        Integer rows = selectBean.getRows();
+        final Map<String, Object> param = selectBean.getParam();
+
+        Pageable pageable = PageRequest.of(page, rows, new Sort("asc".equals(sord) ? Sort.Direction.ASC : Sort.Direction.DESC, sidx));
+        return roleRepository.findAll((Specification<Role>) (root, criteriaQuery, cb) -> {
+            List<Predicate> list = new ArrayList<>();
+            if (type == Constant.JSON_ROLE_TYPE_SELECT_NAME) {
+                if (!SysUtils.isEmpty((String) param.get("name"))) {
+                    list.add(cb.like(root.get("name").as(String.class), "%" + param.get("name") + "%"));
+                }
+            }
+            Predicate[] p = new Predicate[list.size()];
+            return cb.and(list.toArray(p));
+        }, pageable);
     }
 
 }

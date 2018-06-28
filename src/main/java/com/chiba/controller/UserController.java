@@ -66,4 +66,11 @@ public class UserController {
         }
         return "segment/seg_verify_address";
     }
+
+    @GetMapping("/segment_user_info")
+    public String showUserInfoPage(ModelMap map, Long userId) {
+        User user = userService.getUserById(userId).get();
+        map.addAttribute("user", user);
+        return "segment/seg_user_info";
+    }
 }

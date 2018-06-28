@@ -84,6 +84,7 @@
 </div>
 </div>
 <footer th:replace="common_js"/>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/backsystem_commonleft.js')}" id="navigation" charset="utf-8" data="dashboard"></script>
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/datetime/bootstrap-datetimepicker.js')}"></script>
 <script>
     var deleteStatusList = [{id: 0, text: "招募中"}, {id: 1, text: "已截止"}];

@@ -7,6 +7,7 @@ import com.chiba.bean.EmailBean;
 import com.chiba.bean.ResponseBean;
 import com.chiba.bean.SelectBean;
 import com.chiba.config.MailConfig;
+import com.chiba.dao.RoleRepository;
 import com.chiba.dao.UserRepository;
 import com.chiba.domain.Team;
 import com.chiba.domain.User;
@@ -42,6 +43,8 @@ public class CustomUserService implements UserDetailsService {
     private UserRepository userRepository;
     @Autowired
     private MailConfig mailConfig;
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -61,7 +64,7 @@ public class CustomUserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
-    public User getUserByEmail(String email){
+    public User getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
@@ -83,12 +86,57 @@ public class CustomUserService implements UserDetailsService {
                 json.put("text", u.getGameId());
                 jsonArray.add(json);
             }
-            jsonObject.put("rows", jsonArray);
+        } else if (type == Constant.JSON_USER_TYPE_SELECT_LIST) {
+            for (User u : userPage.getContent()) {
+                Map<String, Object> json = new HashMap<>();
+                json.put("id", u.getId());
+                json.put("username", u.getUsername());
+                json.put("gameId", u.getGameId());
+                json.put("role", u.getRole().getName());
+                json.put("clan", u.getClan());
+                json.put("addTime", SysUtils.dateFormat("yyyy-MM-dd HH:mm:ss", u.getAddTime()));
+                json.put("updateTime", SysUtils.dateFormat("yyyy-MM-dd HH:mm:ss", u.getUpdateTime()));
+                json.put("createOperLeft", u.getCreateOperLeft());
+                json.put("deleteStatus", u.isDeleteStatus() ? "已停用" : "已启用");
+                jsonArray.add(json);
+            }
         }
+        jsonObject.put("rows", jsonArray);
         return jsonObject.toJSONString();
     }
 
-    public Page<User> getUserList(final SelectBean selectBean) {
+    public String getJsonStringResult(Page<String> page) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("total", page.getTotalPages());
+        jsonObject.put("page", page.getNumber());
+        jsonObject.put("records", page.getTotalElements());
+        JSONArray jsonArray = new JSONArray();
+        for (String s : page.getContent()) {
+            Map<String, Object> json = new HashMap<>();
+            json.put("id", s);
+            json.put("text", s);
+            jsonArray.add(json);
+        }
+        jsonObject.put("rows", jsonArray);
+        return jsonObject.toJSONString();
+    }
+
+    public Page<String> getUserClanList(final SelectBean selectBean) {
+        String sord = selectBean.getSord();
+        String sidx = selectBean.getSidx();
+        Integer page = selectBean.getPage();
+        Integer rows = selectBean.getRows();
+        final Map<String, Object> param = selectBean.getParam();
+        String clan = "";
+        if (!SysUtils.isEmpty((String)param.get("clan"))) {
+            clan = (String) param.get("clan");
+        }
+        Pageable pageable = PageRequest.of(page, rows, new Sort("asc".equals(sord) ? Sort.Direction.ASC : Sort.Direction.DESC, sidx));
+
+        return userRepository.findUserClanList("%" + clan + "%", pageable);
+    }
+
+    public Page<User> getUserList(final SelectBean selectBean, int type) {
         String sord = selectBean.getSord();
         String sidx = selectBean.getSidx();
         Integer page = selectBean.getPage();
@@ -99,8 +147,23 @@ public class CustomUserService implements UserDetailsService {
 
         return userRepository.findAll((Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> list = new ArrayList<>();
-            if (!SysUtils.isEmpty((String) param.get("username"))) {
-                list.add(criteriaBuilder.like(root.get("gameId").as(String.class), "%" + param.get("username") + "%"));
+            if (type == Constant.JSON_USER_TYPE_SELECT_NAME) {
+                if (!SysUtils.isEmpty((String) param.get("username"))) {
+                    list.add(criteriaBuilder.like(root.get("gameId").as(String.class), "%" + param.get("username") + "%"));
+                }
+            } else if (type == Constant.JSON_USER_TYPE_SELECT_LIST) {
+                if (null != param.get("username")) {
+                    list.add(criteriaBuilder.equal(root.get("id").as(Long.class), param.get("username")));
+                }
+                if (null != param.get("role")) {
+                    list.add(criteriaBuilder.equal(root.get("role").get("id").as(Long.class), param.get("role")));
+                }
+                if (null != param.get("deleteStatus")) {
+                    list.add(criteriaBuilder.equal(root.get("deleteStatus").as(Integer.class), param.get("deleteStatus")));
+                }
+                if (!SysUtils.isEmpty((String) param.get("clan"))) {
+                    list.add(criteriaBuilder.like(root.get("clan").as(String.class), "%" + param.get("clan")));
+                }
             }
             Predicate[] p = new Predicate[list.size()];
             return criteriaBuilder.and(list.toArray(p));
@@ -292,5 +355,26 @@ public class CustomUserService implements UserDetailsService {
             }
         }
         return new ResponseBean(Constant.FAILED, "该链接已被使用或该用户不存在，请核实");
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean manageUserInfo(User user) {
+        User originUser = this.findUserByUsername(user.getUsername());
+        originUser.setRole(roleRepository.getOne(user.getRole().getId()));
+        originUser.setCreateOperLeft(user.getCreateOperLeft());
+        originUser.setUpdateTime(new Date());
+        originUser.setUpdateUser(findUserByUsername(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername()));
+        this.saveUser(originUser);
+        return new ResponseBean();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean forbidUser(Long userId, boolean status) {
+        User user = userRepository.getOne(userId);
+        user.setDeleteStatus(status);
+        user.setUpdateTime(new Date());
+        user.setUpdateUser(findUserByUsername(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername()));
+        saveUser(user);
+        return new ResponseBean();
     }
 }
