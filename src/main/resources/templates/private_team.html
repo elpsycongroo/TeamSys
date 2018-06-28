@@ -5,6 +5,7 @@
 <style>
     input.validate_hidden { position:absolute; height:0; width:0; border:0; }
 </style>
+<link th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/bootstrap-datetimepicker.min.css')}" rel="stylesheet"/>
 <!-- Navbar -->
 <div th:include="common_header :: header" class="navbar">
 
@@ -151,6 +152,7 @@
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/backsystem_commonleft.js')}" id="navigation"
         charset="utf-8" data="private-team"></script>
 <script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/clipboard.min.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/datetime/bootstrap-datetimepicker.js')}"></script>
 <script th:inline="javascript" th:if="${team} ne null">
     jQuery(function ($) {
         if ($("#teamType").val() === "0") {
@@ -199,6 +201,12 @@
             alert("复制成功！现在可以粘贴给你的朋友");
         });
 
+        $("#editBtn").click(function () {
+            commonAjax(null, "/teams/segment_team_create", "GET", {teamId: [[${team.id}]]}, function(data){
+                $("#commonModal").modal("show");
+                $("#segment_modal").html(data);
+            });
+        })
     });
     function kickoff(userId) {
         var r = confirm("确认要踢出该名队员吗？对方将得到通知");

@@ -299,6 +299,20 @@ public class TeamService {
         }
     }
 
+    @Async
+    private void sendChangeLeaderEmail(Team team, User originUser, User changedUser) throws Exception {
+        if (changedUser.isEmailValidation()) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>您加入的【" + team.getTeamName() + "】小队的创建者" +
+                    (SysUtils.isEmpty(originUser.getClan()) ? "" : "[" + originUser.getClan() + "]") +
+                    originUser.getGameId() + "将队长转移给您，您现在拥有该队伍的管理权限。" +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setSubject("您加入的车队更换了队长！——感谢您使用窝窝屎组队系统");
+            emailBean.setReceiver(changedUser.getEmail());
+            mailConfig.sendHtmlMail(emailBean);
+        }
+    }
+
     public String checkCreateTeam() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByUsername(userDetails.getUsername());
@@ -337,6 +351,32 @@ public class TeamService {
             user.setCreateOperLeft(user.getCreateOperLeft() - 1);
             user.setTeam(teamRepository.findByCode(team.getCode()));
             userRepository.save(user);
+        }
+        return responseBean;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseBean editTeamInfo(Team team) throws Exception {
+        Date now = new Date();
+        ResponseBean responseBean = new ResponseBean();
+        if (team.getLimitTime().before(now)) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("截止时间不得早于当前时间");
+        } else {
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User originUser = userRepository.findByUsername(userDetails.getUsername());
+            User changedUser = userRepository.getOne(team.getAddUser().getId());
+            Team t = teamRepository.getOne(team.getId());
+            t.setTeamName(team.getTeamName());
+            t.setType(team.getType());
+            t.setAddUser(changedUser);
+            t.setLimitTime(team.getLimitTime());
+            if (!changedUser.getId().equals(originUser.getId())) {
+                sendChangeLeaderEmail(t, originUser, changedUser);
+            }
+            t.setUpdateTime(now);
+            t.setUpdateUser(originUser);
+            teamRepository.save(t);
         }
         return responseBean;
     }

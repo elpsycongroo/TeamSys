@@ -1,11 +1,17 @@
 <div class="modal-header">
     <style>
-        input.validate_hidden { position:absolute; height:0; width:0; border:0; }
+        input.validate_hidden {
+            position: absolute;
+            height: 0;
+            width: 0;
+            border: 0;
+        }
     </style>
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
             aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title">创建队伍</h4>
+    <h4 class="modal-title" th:if="${team} eq null">创建队伍</h4>
+    <h4 class="modal-title" th:if="${team} ne null">编辑队伍</h4>
 </div>
 
 <div class="modal-body" id="mseriesmodal_content" th:inline="text">
@@ -15,35 +21,42 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right">车队名称</label>
                 <div class="col-sm-7">
-                    <input type="text" class="form-control" name="teamName"/>
+                    <input type="text" class="form-control" name="teamName"
+                           th:value="${team} ne null ? ${team.teamName} : ''"/>
+                    <input type="hidden" name="id" th:if="${team} ne null" th:value="${team.id}"/>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right">车队编码</label>
                 <div class="col-sm-7">
                     <input type="hidden" name="code" th:value="${code}"/>
-                    <div class="form-control" th:text="${code}"></div>
+                    <div class="form-control" th:text="${team} ne null ? ${team.code} : ${code}"></div>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right">车队类型</label>
                 <div class="col-sm-7">
-                    <input type="text" id="teamType" name="type" class="validate_hidden"/>
+                    <input type="text" id="teamType1" name="type" class="validate_hidden"
+                           th:value="${team} ne null ? ${team.type} : ''"/>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right">队长游戏ID</label>
                 <div class="col-sm-7">
-                    <div class="form-control" th:text="${session.currentUser.gameId}"></div>
+                    <div class="form-control" th:if="${team} eq null" th:text="${session.currentUser.gameId}"></div>
+                    <select name="addUser.id" id="addUser" th:if="${team} ne null">
+                        <option th:each="u : ${team.playerList}" th:value="${u.id}">[[${u.username}]]</option>
+                    </select>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right">截止时间</label>
                 <div class="col-sm-7">
-                    <input class="form-control" type="text" id="limitTime" name="limitTime"/>
+                    <input class="form-control" type="text" id="limitTime" name="limitTime"
+                           th:value="${team} ne null ? ${#dates.format(team.limitTime, 'yyyy-MM-dd HH:mm')} : ''"/>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" th:if="${team eq null}">
                 <label class="col-sm-3 control-label no-padding-right">剩余人数</label>
                 <div class="col-sm-7">
                     <select name="posLeft">
@@ -60,15 +73,14 @@
         <div class="col-md-12">
             <div class="col-md-12">
                 <button type="button" class="btn btn-default " data-dismiss="modal">返回</button>
-                <button type="button" class="btn btn-info" id="createBtn" th:if="!${flag}">创建</button>
+                <button type="button" class="btn btn-info" id="createBtn" th:if="${team} eq null and !${flag}">创建</button>
+                <button type="button" class="btn btn-warning" id="editBtn1" th:if="${team} ne null">确定</button>
             </div>
         </div>
     </div>
 </div>
-<script th:if="!${flag}">
+<script th:if="${team} eq null and !${flag}">
     var sourceList = [{id: 0, text: "效率"}, {id: 1, text: "娱乐"}, {id: 2, text: "爬线"}, {id: 3, text: "涂油"}];
-    var grid_selector = "#searchable";
-    var pager_selector = "#grid-pager";
     jQuery(function ($) {
         $("#teamType").select2({
             width: $(this).parent().width(),
@@ -91,7 +103,7 @@
 
         $('#teamForm').bootstrapValidator({
             message: 'This value is not valid',
-            excluded : [':disabled'],
+            excluded: [':disabled'],
             feedbackIcons: {
                 valid: 'glyphicon glyphicon-ok',
                 invalid: 'glyphicon glyphicon-remove',
@@ -111,22 +123,22 @@
                     }
                 },
                 type: {
-                    trigger:"change",
+                    trigger: "change",
                     validators: {
                         notEmpty: {
                             message: '队伍类型不能为空'
                         }
                     }
                 },
-                limitTime : {
-                    validators :{
-                        format : 'YYYY-MM-DD HH:mm',
-                        message : '日期格式不正确'
+                limitTime: {
+                    validators: {
+                        format: 'YYYY-MM-DD HH:mm',
+                        message: '日期格式不正确'
                     }
                 }
             }
         });
-        
+
         $("#createBtn").click(function () {
             var bootstrapValidator = $('#teamForm').data('bootstrapValidator');
             bootstrapValidator.validate();
@@ -145,4 +157,83 @@
             }
         })
     })
+</script>
+<script th:if="${team} ne null" th:inline="javascript">
+    var sourceList = [{id: 0, text: "效率"}, {id: 1, text: "娱乐"}, {id: 2, text: "爬线"}, {id: 3, text: "涂油"}];
+    var typeSeq = [[${team.type}]];
+    jQuery(function ($) {
+        $("#teamType1").select2({
+            width: $(this).parent().width(),
+            minimumInputLength: 0,
+            multiple: false,
+            allowClear: true,
+            data: sourceList,
+            formatSelection: formatSelection,
+            formatResult: formatResult
+        }).on("change", function () {
+            $('#teamForm').data('bootstrapValidator').updateStatus('type', 'NOT_VALIDATED').validateField('type');
+        }).select2("data", {id: [[${team.type}]], text: sourceList[typeSeq].text});
+
+        $("#limitTime").datetimepicker({
+            minView: 'hour',
+            format: 'yyyy-mm-dd hh:ii',
+            autoclose: true,
+            todayBtn: true
+        });
+
+        $('#teamForm').bootstrapValidator({
+            message: 'This value is not valid',
+            excluded: [':disabled'],
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh',
+            },
+            fields: {
+                teamName: {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 3,
+                            max: 15,
+                            message: '长度必须在3-15之间'
+                        },
+                        notEmpty: {
+                            message: '队伍名不能为空'
+                        }
+                    }
+                },
+                type: {
+                    trigger: "change",
+                    validators: {
+                        notEmpty: {
+                            message: '队伍类型不能为空'
+                        }
+                    }
+                },
+                limitTime: {
+                    validators: {
+                        format: 'YYYY-MM-DD HH:mm',
+                        message: '日期格式不正确'
+                    }
+                }
+            }
+        });
+        $("#editBtn1").click(function () {
+            var bootstrapValidator = $('#teamForm').data('bootstrapValidator');
+            bootstrapValidator.validate();
+            if (bootstrapValidator.isValid()) {
+                //表单提交的方法、比如ajax提交
+                var data = $("#teamForm").serialize();
+                commonAjax(false, "/api/teams", "PUT", data, function (resp) {
+                    if (resp.status === "ok") {
+                        alert("修改成功");
+                        location.reload();
+                    } else {
+                        alert(resp.msg);
+                    }
+                });
+            }
+        })
+        $("#addUser").val([[${team.addUser.id}]]);
+    });
 </script>

@@ -271,6 +271,17 @@ public class ApiController {
         }
     }
 
+    @PutMapping("/teams")
+    public ResponseBean editTeam(Team team) {
+        try {
+            return teamService.editTeamInfo(team);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
     @PostMapping("/teams/join")
     public ResponseBean joinTeam(Long teamId, Long userId) {
         try {

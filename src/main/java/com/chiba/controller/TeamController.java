@@ -42,14 +42,19 @@ public class TeamController {
     }
 
     @GetMapping("/segment_team_create")
-    public String showCreateTeamPage(ModelMap map) {
-        String msg = teamService.checkCreateTeam();
-        if (null != msg) {
-            map.addAttribute("flag", true);
-            map.addAttribute("info", msg);
+    public String showCreateTeamPage(ModelMap map, Long teamId) {
+        if (null != teamId) {
+            Team team = teamService.getTeamById(teamId);
+            map.addAttribute("team", team);
         } else {
-            map.addAttribute("flag", false);
-            map.addAttribute("code", SysUtils.generateShortUuid());
+            String msg = teamService.checkCreateTeam();
+            if (null != msg) {
+                map.addAttribute("flag", true);
+                map.addAttribute("info", msg);
+            } else {
+                map.addAttribute("flag", false);
+                map.addAttribute("code", SysUtils.generateShortUuid());
+            }
         }
         return "segment/seg_team_create";
     }
