@@ -15,6 +15,7 @@ import com.chiba.utils.MD5Util;
 import com.chiba.utils.SysUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,9 @@ public class CustomUserService implements UserDetailsService {
     private MailConfig mailConfig;
     @Autowired
     private RoleRepository roleRepository;
+
+    @Value("${constant.host}")
+    private String HOST;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -250,8 +254,8 @@ public class CustomUserService implements UserDetailsService {
         Date nowDate = new Date();
         String link = MD5Util.encode(UUID.randomUUID().toString() + user.getUsername());
         EmailBean emailBean = new EmailBean();
-        emailBean.setContent("<h3>您的激活邮箱链接为<br><a herf='" + Constant.HOST + "/users/email/verify_address?username="
-                + user.getUsername() + "&link=" + link + "'>" + Constant.HOST + "/users/email/verify_address?username="
+        emailBean.setContent("<h3>您的激活邮箱链接为<br><a herf='" + HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "'>" + HOST + "/users/email/verify_address?username="
                 + user.getUsername() + "&link=" + link + "</a><br>该链接30分钟内有效，激活后您可获得组队通知推送和找回密码功能，请勿公开！</h3>" +
                 "<br>(如不能直接打开链接，请复制到浏览器后打开;该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
         emailBean.setReceiver(user.getEmail());
@@ -305,8 +309,8 @@ public class CustomUserService implements UserDetailsService {
         Date nowDate = new Date();
         String link = MD5Util.encode(UUID.randomUUID().toString() + user.getUsername() + "forget");
         EmailBean emailBean = new EmailBean();
-        emailBean.setContent("<h3>您的密码找回邮箱链接为<br><a herf='" + Constant.HOST + "/users/email/verify_address?username="
-                + user.getUsername() + "&link=" + link + "&forget=true'>" + Constant.HOST + "/users/email/verify_address?username="
+        emailBean.setContent("<h3>您的密码找回邮箱链接为<br><a herf='" + HOST + "/users/email/verify_address?username="
+                + user.getUsername() + "&link=" + link + "&forget=true'>" + HOST + "/users/email/verify_address?username="
                 + user.getUsername() + "&link=" + link + "&forget=true</a><br>该链接30分钟内有效，确认后您的密码将会被重置，请勿公开！</h3>" +
                 "<br>(如不能直接打开链接，请复制到浏览器后打开;该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
         emailBean.setReceiver(user.getEmail());

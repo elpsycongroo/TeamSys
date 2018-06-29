@@ -1,13 +1,14 @@
 package com.chiba.bean;
 
+import org.springframework.stereotype.Component;
+
 /*****************************************
  *  @author Yuudachi(HanZhumeng)
  *  @date 2018/6/5              
  *  Description: 
  *****************************************/
+@Component
 public class Constant {
-
-    public static final String HOST = "http://localhost:8080";
 
     public static final String OK = "ok";
     public static final String FAILED = "failed";

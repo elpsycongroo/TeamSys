@@ -73,3 +73,5 @@ kaptcha:
     clear:
       from: 247,247,247
       to: 247,247,247
+constant:
+  host: http://localhost:8080
