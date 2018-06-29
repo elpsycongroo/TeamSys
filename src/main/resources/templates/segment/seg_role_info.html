@@ -1,0 +1,200 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title" th:if="${role} ne null">修改角色信息</h4>
+    <h4 class="modal-title" th:if="${role} eq null">新增角色</h4>
+</div>
+<div class="modal-body" id="musermodal_content">
+    <form class="form-horizontal" id="roleForm" role="form">
+        <div class="form-group">
+            <label class="col-sm-2 control-label no-padding-right">角色名
+            </label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" name="name" th:value="${role.id} ne null ? ${role.name} : ''"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="code" class="col-sm-2 control-label no-padding-right">角色编码
+            </label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" name="code" th:value="${role.id} ne null ? ${role.code} : ${code}"
+                       id="code"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="remark" class="col-sm-2 control-label no-padding-right">备注
+            </label>
+            <div class="col-sm-7">
+                <textarea type="text" class="form-control" name="remark" th:text="${role.id} ne null ? ${role.remark} : ''"
+                       id="remark"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="code" class="col-sm-2 control-label no-padding-right">权限列表
+            </label>
+            <div class="col-sm-7">
+                <div id="tree_content" style="overflow-y: auto; max-height: 300px; overflow-x: hidden;">
+                    <ul id="resourceTree" class="ztree"></ul>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" th:if="${role.id} ne null" value="1" id="flag"/>
+        <input name="map_content" type="hidden" id="map_content"/>
+        <input type="hidden" th:if="${role.id} ne null" th:value="${role.id}" name="id"/>
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info" id="regBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    var treediv;
+    var map_content = new Array();
+
+    jQuery(function ($) {
+        $('#roleForm').bootstrapValidator({
+            message: 'This value is not valid',
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                name: {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 3,
+                            max: 8,
+                            message: '长度必须在3-8之间'
+                        }
+                    }
+                },
+                code: {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 3,
+                            max: 15,
+                            message: '长度必须在3-15之间'
+                        },
+                        remote: {
+                            url : 'api/check_role_code',
+                            data : {
+                                code: $("#code").val(),
+                                id: $("#flag").val() === 1 ? $("#id").val() : null
+                            },
+                            message : "该编号已存在",
+                            type : 'get'
+                        }
+                    }
+                },
+                remark : {
+                    validators: {
+                        stringLength: {//检测长度
+                            min: 0,
+                            max: 50,
+                            message: '长度必须在0-50之间'
+                        }
+                    }
+                }
+            }
+        });
+        $("#regBtn").click(function () {
+            var bootstrapValidator = $('#roleForm').data('bootstrapValidator');
+            bootstrapValidator.validate();
+            if (bootstrapValidator.isValid()) {
+                //表单提交的方法、比如ajax提交
+                var requestType;
+                if ($("flag").val() === 1) {
+                    requestType = "PUT";
+                } else {
+                    requestType = "POST";
+                }
+                var treeObj = jQuery.fn.zTree.getZTreeObj("resourceTree");
+                var nodes = treeObj.getCheckedNodes(true);
+                for (var i = 0; i < nodes.length; i++) {
+                    if (i == nodes.length - 1) {
+                        map_content.push(nodes[i].id); //获取选中节点的值
+                    } else {
+                        map_content.push(nodes[i].id + ","); //获取选中节点的值
+                    }
+                }
+                jQuery("#map_content").val(map_content.join(""));
+                var data = $("#roleForm").serialize();
+                commonAjax(false, "/api/roles", requestType, data, function (resp) {
+                    if (eval(resp).status == "ok") {
+                        alert("提交成功！部分功能将在重新登录后生效");
+                        $("#commonModal").modal("hide");
+                        jQuery("#searchable").trigger("reloadGrid");
+                    } else {
+                        alert(resp.msg);
+                    }
+                });
+            }
+        });
+        var setting = {
+            check: {
+                enable: true,
+                chkStyle: "checkbox",
+                chkboxType: {"Y": "ps", "N": "ps"}
+            },
+            view: {
+                showLine: true,
+                fontCss: {'font-size': 'italic'},
+                selectedMulti: true
+
+            },
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "pId"
+                }
+            },
+            async: {
+                enable: true
+            }
+        };
+        jQuery.ajax({
+            cache: false,
+            type: 'GET',
+            async: false,
+            dataType: "json",
+            url: '/resources/ztree_list',//请求的action路径
+            error: function () {//请求失败处理函数
+            },
+            success: function (data) { //请求成功后处理函数。
+                treediv = jQuery.fn.zTree.init(jQuery("#resourceTree"), setting, data);
+                treediv.expandAll(true);
+            }
+        });
+        if ([[${role.id}]] != null) {
+            jQuery.ajax({
+                cache: false,
+                type: 'GET',
+                async: false,
+                data: {id: [[${role.id}]]},
+                dataType: "json",
+                url: '/resources/ztree_checked_list',//请求的action路径
+                error: function () {//请求失败处理函数
+                },
+                success: function (data) { //请求成功后处理函数。
+                    treediv.checkAllNodes(false);
+                    treediv.cancelSelectedNode();
+                    var nodes = treediv.getNodes();
+                    for (var i = 0; i < data.length; i++) {
+                        var node = treediv.getNodeByParam("id", data[i].id, null);
+                        treediv.checkNode(node, true, false);
+                        treediv.expandAll(true);
+                    }
+                }
+            });
+        }
+    })
+</script>

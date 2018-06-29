@@ -41,6 +41,10 @@ public class RoleService {
         return roleRepository.findByCode(code);
     }
 
+    public void save(Role role) {
+        roleRepository.save(role);
+    }
+
     public String getJsonResult(Page<Role> page, int type) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("total", page.getTotalPages());
@@ -52,6 +56,17 @@ public class RoleService {
                 JSONObject json = new JSONObject();
                 json.put("id", r.getId());
                 json.put("text", r.getName());
+                jsonArray.add(json);
+            }
+        } else if (type == Constant.JSON_ROLE_TYPE_SELECT_LIST) {
+            for (Role r : page.getContent()) {
+                JSONObject json = new JSONObject();
+                json.put("id", r.getId());
+                json.put("name", r.getName());
+                json.put("updateTime", r.getUpdateTime() != null ? SysUtils.dateFormat("yyyy-MM-dd HH:mm:ss", r.getUpdateTime()): "");
+                json.put("updateUser", r.getUpdateUser() != null ? r.getUpdateUser().getUsername() : "");
+                json.put("code", r.getCode());
+                json.put("remark", r.getRemark());
                 jsonArray.add(json);
             }
         }
@@ -73,6 +88,8 @@ public class RoleService {
                 if (!SysUtils.isEmpty((String) param.get("name"))) {
                     list.add(cb.like(root.get("name").as(String.class), "%" + param.get("name") + "%"));
                 }
+            } else if (type == Constant.JSON_ROLE_TYPE_SELECT_LIST) {
+
             }
             Predicate[] p = new Predicate[list.size()];
             return cb.and(list.toArray(p));

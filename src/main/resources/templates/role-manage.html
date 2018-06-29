@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:include="common_css::head(title='角色管理')"/>
+<body>
+<link rel="stylesheet" th:href="${@mvcResourceUrlProvider.getForLookupPath('/assets/css/zTreeStyle.css')}"/>
+<!-- Navbar -->
+<div th:include="common_header :: header" class="navbar">
+
+</div>
+<!-- /Navbar -->
+
+<div class="main-container container-fluid">
+    <div class="page-container">
+        <div th:include="common_leftslider :: leftslider" class="page-sidebar" id="sidebar"></div>
+
+        <div class="page-content">
+            <!-- Page Breadcrumb -->
+            <div class="page-breadcrumbs">
+                <ul class="breadcrumb">
+                    <li>
+                        <i class="fa fa-home"></i>
+                        <a href="#">组队系统</a>
+                    </li>
+                    <li class="active">角色管理</li>
+                </ul>
+            </div>
+            <!-- /Page Breadcrumb -->
+
+            <!-- Page Body -->
+            <div class="page-body">
+                <div class="row">
+                    <div class="col-xs-12 col-md-12">
+                        <div class="widget" style="margin-top:-10px;">
+                            <div class="widget-body  bordered-warning">
+                                <div class="form-inline">
+                                    <div class="form-group">
+                                    </div>
+                                    <button href="#" class="btn btn-success  bootbox-add-options" style="float: right;"
+                                            onclick="createRole();"><i
+                                            class="fa fa-plus"></i>创建角色
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="widget" style="margin-top:-25px;">
+                            <div class="widget-body no-padding" id="gridWidget">
+                                <table class="table table-bordered table-hover table-striped" id="searchable">
+                                </table>
+                                <div id="grid-pager"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /Page Body -->
+        </div>
+        <!-- /Page Content -->
+    </div>
+    <!-- /Page Container -->
+    <!-- Main Container -->
+
+</div>
+<footer th:replace="common_js"/>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/ztree/jquery.ztree.core-3.5.js')}"></script>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/ztree/jquery.ztree.excheck-3.5.js')}"></script>
+</body>
+<script th:src="${@mvcResourceUrlProvider.getForLookupPath('/assets/js/backsystem_commonleft.js')}" id="navigation"
+        charset="utf-8" data="role-manage"></script>
+<script th:inline="javascript">
+    var grid_selector = "#searchable";
+    var pager_selector = "#grid-pager";
+    jQuery(function ($) {
+        jQuery(grid_selector).jqGrid({
+            url: "/api/roles",
+            mtype: "GET",
+            datatype: "json",
+            postData: {},
+            regional: 'cn',
+            rownumbers: true,
+            autoScroll: true,
+            altRows: true,
+            viewrecords: true,
+            height: "100%",
+            sortname: "updateTime",
+            sortorder: "desc",
+            colNames: ['ID', '角色名', '更新时间', '更新人', "角色编码", '备注', '操作'],
+            colModel: [
+                {name: 'id', index: 'id', sortable: false, editable: false, search: false, hidden: true},
+                {name: 'name', index: 'name', width: 200, editable: false, search: false, sortable: false},
+                {name: 'updateTime', index: 'updateTime', width: 200, editable: false, search: false, sortable: false},
+                {name: 'updateUser', index: 'updateUser', width: 150, editable: false, search: false, sortable: true},
+                {name: 'code', index: 'code', width: 150, editable: false, search: false, sortable: true},
+                {name: 'remark', index: 'remark', width: 200, editable: false, search: false, sortable: true},
+                {name: 'action', index: 'action', width: 200, editable: false, search: false, sortable: false}
+            ],
+            rowNum: 10,
+            rowList: [10, 50, 100],
+            pager: pager_selector,
+            autowidth: false,
+            shrinkToFit: false,
+            width: jQuery("#gridWidget").width(),
+            gridComplete: function () {
+                var ids = jQuery(grid_selector).jqGrid("getDataIDs");
+                for (var i = 0; i < ids.length; i++) {
+                    var id = jQuery(grid_selector).getCell(ids[i], "id");
+                    var modify = "<div onclick='showRoleInfo(" + ids[i] + ")' class='btn btn-xs btn-warning' style='margin-right:12px'><i class='fa fa-edit'></i>编辑</div>"
+                    jQuery(grid_selector).jqGrid('setRowData', ids[i], {action: modify});
+                }
+            }
+        }).jqGrid('navGrid', pager_selector,
+            {
+                refresh: true,
+                edit: false,
+                add: false,
+                del: false,
+                search: false,
+                view: false
+            });
+        $(".page-body").resize(function () {
+            $(grid_selector).setGridWidth($("#gridWidget").width())
+                .closest(".ui-jqgrid-bdiv").css({'overflow-x': 'auto'});
+        });
+    })
+    function showRoleInfo(id) {
+        commonAjax(null, "/roles/segment_role_info", "GET", {roleId: id}, function (data) {
+            jQuery("#commonModal").modal("show");
+            jQuery("#segment_modal").html(data);
+        })
+    }
+    function createRole() {
+        showRoleInfo(null);
+    }
+</script>

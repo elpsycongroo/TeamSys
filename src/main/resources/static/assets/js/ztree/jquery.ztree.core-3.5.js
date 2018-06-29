@@ -328,6 +328,7 @@
 			data.getCache(setting).nodes[data.getNodeCacheId(node.tId)] = node;
 		},
 		getNodeCacheId: function(tId) {
+			tId += "";
 			return tId.substring(tId.lastIndexOf("_")+1);
 		},
 		addAfterA: function(afterA) {

@@ -8,6 +8,7 @@ import com.chiba.domain.Role;
 import com.chiba.domain.Team;
 import com.chiba.domain.User;
 import com.chiba.service.CustomUserService;
+import com.chiba.service.ResourceService;
 import com.chiba.service.RoleService;
 import com.chiba.service.TeamService;
 import com.chiba.utils.MD5Util;
@@ -45,6 +46,9 @@ public class ApiController {
 
     @Autowired
     private TeamService teamService;
+
+    @Autowired
+    private ResourceService resourceService;
 
     @InitBinder
     protected void init(HttpServletRequest request, ServletRequestDataBinder binder) throws Exception {
@@ -93,6 +97,17 @@ public class ApiController {
             return new ValidatorBean(true);
         }
         return new ValidatorBean(false);
+    }
+
+    @GetMapping("check_role_code")
+    public ValidatorBean checkRoleCode(String code, Long id) {
+        Role role = roleService.findByCode(code);
+        if (null != role) {
+            if (null != id && !role.getId().equals(id)) {
+                return new ValidatorBean(false);
+            }
+        }
+        return new ValidatorBean(true);
     }
 
     @PostMapping("register")
@@ -342,4 +357,37 @@ public class ApiController {
             return "error";
         }
     }
+
+    @GetMapping("/roles")
+    public String getRolesList(Integer rows, Integer page, String sidx, String sord) {
+        try {
+            SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
+            Page<Role> rolePage = roleService.getRoleList(selectBean, Constant.JSON_ROLE_TYPE_SELECT_LIST);
+            return roleService.getJsonResult(rolePage, Constant.JSON_ROLE_TYPE_SELECT_LIST);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return "error";
+        }
+    }
+
+    @PostMapping("/roles")
+    public ResponseBean addRoles(Role role,  String map_content, HttpServletRequest request) {
+        try {
+            resourceService.processResourceList(role, map_content);
+            User currentUser = (User) request.getSession().getAttribute("currentUser");
+            resourceService.saveRole(role, currentUser);
+            return new ResponseBean();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return new ResponseBean(Constant.FAILED, "出现异常");
+        }
+    }
+
+    @PutMapping("/roles")
+    public ResponseBean editRoles(Role role, String map_content, HttpServletRequest request) {
+        return addRoles(role, map_content, request);
+    }
+
 }

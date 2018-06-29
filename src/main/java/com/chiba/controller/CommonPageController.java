@@ -102,4 +102,9 @@ public class CommonPageController {
     public String getUserManagePage() {
         return "user_manage";
     }
+
+    @GetMapping("/role-manage")
+    public String getRoleManagePage() {
+        return "role-manage";
+    }
 }

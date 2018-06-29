@@ -2338,7 +2338,8 @@
                     headers: headers,
                     url: url,
                     dataType: 'json',
-                    data: data
+                    data: data,
+                    async: false
                 });
                 xhr.then(function(response) {
                     dfd.resolve($field, 'remote', response.valid === true || response.valid === 'true', response.message ? response.message : null);
