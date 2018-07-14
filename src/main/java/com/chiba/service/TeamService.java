@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /*****************************************
@@ -51,10 +52,14 @@ public class TeamService {
         teamRepository.save(team);
     }
 
+    public List<Team> getTeamByDeleteStatus(boolean deleteStatus) {
+        return teamRepository.findByDeleteStatus(deleteStatus);
+    }
+
     public String getJsonResult(Page<Team> teamPage) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("total", teamPage.getTotalPages());
-        jsonObject.put("page", teamPage.getNumber());
+        jsonObject.put("page", teamPage.getNumber() + 1);
         jsonObject.put("records", teamPage.getTotalElements());
         JSONArray jsonArray = new JSONArray();
         for (Team t : teamPage.getContent()) {
@@ -97,6 +102,9 @@ public class TeamService {
             }
             if (null != param.get("type")) {
                 list.add(criteriaBuilder.equal(root.get("type").as(Integer.class), param.get("type")));
+            }
+            if (!SysUtils.isEmpty((String) param.get("code"))) {
+                list.add(criteriaBuilder.like(root.get("code").as(String.class), "%" + param.get("code") + "%"));
             }
             Predicate[] p = new Predicate[list.size()];
             return criteriaBuilder.and(list.toArray(p));
@@ -313,6 +321,26 @@ public class TeamService {
         }
     }
 
+    @Async
+    private void sendChangeLimitDateEmail(Team team) throws Exception {
+        List<User> users = team.getPlayerList();
+        StringBuffer stringBuffer = new StringBuffer("");
+        for (User u : users) {
+            if (u.isEmailValidation()) {
+                stringBuffer.append(u.getEmail()).append(";");
+            }
+        }
+        if (!SysUtils.isEmpty(stringBuffer.toString())) {
+            EmailBean emailBean = new EmailBean();
+            emailBean.setContent("<h3>您加入的【" + team.getTeamName() + "】小队，开车时间已被更改，" +
+                    "现在的开车时间是：" +  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(team.getLimitTime()) +
+                    "</h3><br>(该邮件为系统自动发送，请勿回复)<br>窝窝屎组队系统");
+            emailBean.setSubject("您加入的车队开车时间被更改！——感谢您使用窝窝屎组队系统");
+            emailBean.setReceiver(stringBuffer.toString());
+            mailConfig.sendHtmlMail(emailBean);
+        }
+    }
+
     public String checkCreateTeam() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByUsername(userDetails.getUsername());
@@ -331,6 +359,7 @@ public class TeamService {
     public ResponseBean createTeam(Team team) {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByUsername(userDetails.getUsername());
+
         ResponseBean responseBean = new ResponseBean();
         if (null != user.getTeam()) {
             responseBean.setStatus(Constant.FAILED);
@@ -358,25 +387,35 @@ public class TeamService {
     @Transactional(rollbackFor = Exception.class)
     public ResponseBean editTeamInfo(Team team) throws Exception {
         Date now = new Date();
+        Team originTeam = teamRepository.getOne(team.getId());
+        Calendar newLimitTime = Calendar.getInstance();
+        newLimitTime.setTime(originTeam.getLimitTime());
+        newLimitTime.add(Calendar.MINUTE, 60);
         ResponseBean responseBean = new ResponseBean();
         if (team.getLimitTime().before(now)) {
             responseBean.setStatus(Constant.FAILED);
             responseBean.setMsg("截止时间不得早于当前时间");
+        } else if (team.getLimitTime().before(newLimitTime.getTime())) {
+            responseBean.setStatus(Constant.FAILED);
+            responseBean.setMsg("为了方便队员调整决策，截止日期至少要推迟1小时以上");
         } else {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             User originUser = userRepository.findByUsername(userDetails.getUsername());
             User changedUser = userRepository.getOne(team.getAddUser().getId());
-            Team t = teamRepository.getOne(team.getId());
-            t.setTeamName(team.getTeamName());
-            t.setType(team.getType());
-            t.setAddUser(changedUser);
-            t.setLimitTime(team.getLimitTime());
+
+            originTeam.setTeamName(team.getTeamName());
+            originTeam.setType(team.getType());
+            originTeam.setAddUser(changedUser);
+            originTeam.setLimitTime(team.getLimitTime());
             if (!changedUser.getId().equals(originUser.getId())) {
-                sendChangeLeaderEmail(t, originUser, changedUser);
+                sendChangeLeaderEmail(originTeam, originUser, changedUser);
             }
-            t.setUpdateTime(now);
-            t.setUpdateUser(originUser);
-            teamRepository.save(t);
+            if (team.getLimitTime().after(originTeam.getLimitTime())) {
+                sendChangeLimitDateEmail(originTeam);
+            }
+            originTeam.setUpdateTime(now);
+            originTeam.setUpdateUser(originUser);
+            teamRepository.save(originTeam);
         }
         return responseBean;
     }

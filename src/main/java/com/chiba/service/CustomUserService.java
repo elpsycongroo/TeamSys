@@ -80,7 +80,7 @@ public class CustomUserService implements UserDetailsService {
     public String getJsonResult(Page<User> userPage, int type) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("total", userPage.getTotalPages());
-        jsonObject.put("page", userPage.getNumber());
+        jsonObject.put("page", userPage.getNumber() + 1);
         jsonObject.put("records", userPage.getTotalElements());
         JSONArray jsonArray = new JSONArray();
         if (type == Constant.JSON_USER_TYPE_SELECT_NAME) {

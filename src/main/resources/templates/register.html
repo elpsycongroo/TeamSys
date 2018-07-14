@@ -180,7 +180,7 @@
                 var data = $("#reg-form").serialize();
                 commonAjax(false, "/api/register", "POST", data, function (resp) {
                     if (eval(resp).status == "ok") {
-                        alert("注册成功，请登录！");
+                        alert("注册成功，请登录！【注意：请务必在个人信息中验证邮箱，以正常使用邮件通知和找回密码功能！】");
                         window.location.href = "login";
                     }
                 });

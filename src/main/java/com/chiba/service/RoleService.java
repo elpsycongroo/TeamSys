@@ -48,7 +48,7 @@ public class RoleService {
     public String getJsonResult(Page<Role> page, int type) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("total", page.getTotalPages());
-        jsonObject.put("page", page.getNumber());
+        jsonObject.put("page", page.getNumber() + 1);
         jsonObject.put("records", page.getTotalElements());
         JSONArray jsonArray = new JSONArray();
         if (type == Constant.JSON_ROLE_TYPE_SELECT_NAME) {

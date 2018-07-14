@@ -251,7 +251,7 @@ public class ApiController {
 
     //========================================TEAM========================================
     @GetMapping("/teams")
-    public String getTeamList(String teamName, Integer deleteStatus, Long leader, Integer type, Integer rows, Integer page, String sidx, String sord) {
+    public String getTeamList(String teamName, String code, Integer deleteStatus, Long leader, Integer type, Integer rows, Integer page, String sidx, String sord) {
         try {
             SelectBean selectBean = new SelectBean(sidx, sord, page, rows);
             if (!SysUtils.isEmpty(teamName)) {
@@ -265,6 +265,9 @@ public class ApiController {
             }
             if (null != type) {
                 selectBean.getParam().put("type", type);
+            }
+            if (!SysUtils.isEmpty(code)) {
+                selectBean.getParam().put("code", code);
             }
             Page<Team> teamPage = teamService.getTeamList(selectBean);
             return teamService.getJsonResult(teamPage);

@@ -161,6 +161,13 @@
 					<!--fork :  如果没有该项配置，肯定devtools不会起作用，即应用不会restart -->
 					<fork>true</fork>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

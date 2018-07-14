@@ -1,10 +1,10 @@
 package com.chiba.config;
 
 import com.chiba.bean.EmailBean;
+import com.sun.mail.util.MailSSLSocketFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -39,14 +39,24 @@ public class MailConfig {
     @Value("${spring.mail.properties.mail.smtp.starttls.required}")
     private boolean startTlsRequired;
 
+    @Value("${spring.mail.properties.mail.smtp.port}")
+    private int port;
+
     @Bean(name = "JavaMailSenderImpl")
-    public JavaMailSenderImpl getMailSender() {
+    public JavaMailSenderImpl getMailSender() throws Exception{
         JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
         javaMailSender.setHost(host);
         javaMailSender.setUsername(account);
         javaMailSender.setPassword(password);
         Properties properties = new Properties();
         properties.put("mail.smtp.auth", auth);
+        properties.put("mail.smtp.port", port);
+        MailSSLSocketFactory sf = new MailSSLSocketFactory();
+        sf.setTrustAllHosts(true);
+        properties.put("mail.smtp.ssl.enable", "true");
+        properties.put("mail.smtp.ssl.socketFactory", sf);
+        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        properties.put("mail.smtp.socketFactory.port", port);
         javaMailSender.setJavaMailProperties(properties);
         return javaMailSender;
     }

@@ -38,6 +38,7 @@
                 <div class="col-sm-7">
                     <input type="text" id="teamType1" name="type" class="validate_hidden"
                            th:value="${team} ne null ? ${team.type} : ''"/>
+                    <input type="hidden" id="teamType"/>
                 </div>
             </div>
             <div class="form-group">
@@ -91,6 +92,7 @@
             formatSelection: formatSelection,
             formatResult: formatResult
         }).on("change", function () {
+            $('#teamType1').val($('#teamType').val());
             $('#teamForm').data('bootstrapValidator').updateStatus('type', 'NOT_VALIDATED').validateField('type');
         });
 
